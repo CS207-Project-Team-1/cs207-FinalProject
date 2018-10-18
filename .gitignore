@@ -1,0 +1,13 @@
+# Python
+*.pyc
+*__pycache__*
+
+# VSCode
+*.vscode
+*.DS_Store
+
+# Coveralls
+*.coverage
+
+# Pytest
+*.pytest*
