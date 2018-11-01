@@ -82,3 +82,4 @@ fabric.properties
 # Pycharm
 .idea/*.xml
 .idea/codeStyles/*.xml
+*.xml
