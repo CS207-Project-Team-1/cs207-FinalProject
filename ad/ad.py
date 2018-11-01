@@ -189,7 +189,7 @@ class Cosh(Unop):
             d_cache_dict[id(self)] = d1 * np.sinh(res1)
         return d_cache_dict[id(self)]
 
-class Cosh(Unop):
+class Tanh(Unop):
     """Hyperbolic tangent operation"""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
