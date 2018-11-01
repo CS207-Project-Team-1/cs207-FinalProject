@@ -240,6 +240,21 @@ class Power(Unop):
                                      * np.power(res1, self.exponent-1)
         return d_cache_dict[id(self)]
 
+class Log(Unop):
+    """Logrithm operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.log(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 / res1
+        return d_cache_dict[id(self)]
+
 class Binop(Expression):
     '''Utilities common to all binary operations in the form Op(a, b)'''
     def __init__(self, expr1, expr2, grad=False):
