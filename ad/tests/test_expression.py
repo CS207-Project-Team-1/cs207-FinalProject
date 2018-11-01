@@ -18,3 +18,9 @@ def test_invalid_variable_feed_raises():
     x = ad.Variable('x')
     with pytest.raises(ValueError):
         x.eval({'deadbeef': 5})
+
+def test_power():
+    x = ad.Variable('x')
+    y = ad.Power(x, 3)
+    assert y.eval({x: 10.0}) == 1000.0
+    assert y.d({x: 10.0}) == 300.0
