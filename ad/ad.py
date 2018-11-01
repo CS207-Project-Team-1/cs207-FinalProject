@@ -220,6 +220,26 @@ class Exp(Unop):
             d_cache_dict[id(self)] = d1 * np.exp(res1)
         return d_cache_dict[id(self)]
 
+class Power(Unop):
+    """Power operation in the form x ** n"""
+    def __init__(self, expr1, exponent, grad=False):
+        super().__init__(expr1=expr1, grad=grad)
+        self.exponent = exponent
+
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.power(res1, self.exponent)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * self.exponent \
+                                     * np.power(res1, self.exponent-1)
+        return d_cache_dict[id(self)]
+
 class Binop(Expression):
     '''Utilities common to all binary operations in the form Op(a, b)'''
     def __init__(self, expr1, expr2, grad=False):
