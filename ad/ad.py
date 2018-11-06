@@ -192,7 +192,7 @@ class Tan(Unop):
     >>> y.eval({x: 1.0})
     1.5574077246549023
     >>> y.d({x: 1.0})
-    3.425518820814759
+    3.42551882081476
     """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
