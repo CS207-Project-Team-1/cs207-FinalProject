@@ -130,7 +130,17 @@ class Unop(Expression):
         self.children = [self.expr1]
 
 class Sin(Unop):
-    """Trigonometric sine."""
+    """Trigonometric sine.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Sin(x)
+    >>> y.eval({x: 1.0})
+    0.8414709848078965
+    >>> y.d({x: 1.0})
+    0.5403023058681398
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -145,7 +155,17 @@ class Sin(Unop):
         return d_cache_dict[id(self)]
 
 class Cos(Unop):
-    """Trigonometric cosine."""
+    """Trigonometric cosine.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Cos(x)
+    >>> y.eval({x: 1.0})
+    0.5403023058681398
+    >>> y.d({x: 1.0})
+    -0.8414709848078965
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -160,7 +180,17 @@ class Cos(Unop):
         return d_cache_dict[id(self)]
 
 class Tan(Unop):
-    """Trigonometric tangent."""
+    """Trigonometric tangent.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Tan(x)
+    >>> y.eval({x: 1.0})
+    1.557407724654902
+    >>> y.d({x: 1.0})
+    3.425518820814759
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -176,7 +206,17 @@ class Tan(Unop):
         return d_cache_dict[id(self)]
 
 class Sinh(Unop):
-    """Hyperbolic sine."""
+    """Hyperbolic sine.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Sinh(x)
+    >>> y.eval({x: 1.0})
+    1.1752011936438014
+    >>> y.d({x: 1.0})
+    1.5430806348152437
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -191,7 +231,17 @@ class Sinh(Unop):
         return d_cache_dict[id(self)]
 
 class Cosh(Unop):
-    """Hyperbolic cosine."""
+    """Hyperbolic cosine.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Cosh(x)
+    >>> y.eval({x: 1.0})
+    1.5430806348152437
+    >>> y.d({x: 1.0})
+    1.1752011936438014
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -206,7 +256,17 @@ class Cosh(Unop):
         return d_cache_dict[id(self)]
 
 class Tanh(Unop):
-    """Hyperbolic tangent."""
+    """Hyperbolic tangent.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Tanh(x)
+    >>> y.eval({x: 1.0})
+    0.7615941559557649
+    >>> y.d({x: 1.0})
+    0.41997434161402614
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -222,7 +282,17 @@ class Tanh(Unop):
         return d_cache_dict[id(self)]
 
 class Exp(Unop):
-    """Exponential function in base e."""
+    """Exponential function in base e.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Exp(x)
+    >>> y.eval({x: 1.0})
+    2.718281828459045
+    >>> y.d({x: 1.0})
+    2.718281828459045
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -237,7 +307,17 @@ class Exp(Unop):
         return d_cache_dict[id(self)]
 
 class Power(Unop):
-    """Power function, the input is raised to the power of exponent."""
+    """Power function, the input is raised to the power of exponent.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Power(x, 2)
+    >>> y.eval({x: 10.0})
+    100.0
+    >>> y.d({x: 10.0})
+    20.0
+    """
     def __init__(self, expr1, exponent, grad=False):
         super().__init__(expr1=expr1, grad=grad)
         self.exponent = exponent
@@ -259,7 +339,17 @@ class Power(Unop):
 class Log(Unop):
     """Natural logarithm.
     The natural logarithm log is the inverse of the exponential function, so
-    that log(exp(x)) = x. The natural logarithm is logarithm in base e."""
+    that log(exp(x)) = x. The natural logarithm is logarithm in base e.
+
+    Examples
+    --------
+    >>> x = ad.Variable('x')
+    >>> y = ad.Log(x)
+    >>> y.eval({x: 1.0})
+    0.0
+    >>> y.d({x: 10.0})
+    1.0
+    """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
