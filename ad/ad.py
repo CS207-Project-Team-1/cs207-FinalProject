@@ -107,14 +107,30 @@ class Constant(Expression):
 
 
 class Unop(Expression):
-    '''Utilities common to all unary operations in the form Op(a)'''
+    """Utilities common to all unary operations in the form Op(a)
+
+    Attributes
+    ----------
+    expr1: Expression
+        Input of the unary function
+    children: list of Expression
+        The children of the unary function, i.e. expr1
+    """
     def __init__(self, expr1, grad=False):
+        """
+        Parameters
+        ----------
+        expr1 : Expression
+            Input of the unary function.
+        grad : bool, optional
+            If True, then allow the Expression to calculate the derivative.
+        """
         super().__init__(grad=grad)
         self.expr1 = expr1
         self.children = [self.expr1]
 
 class Sin(Unop):
-    """Sine operation"""
+    """Trigonometric sine."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -129,7 +145,7 @@ class Sin(Unop):
         return d_cache_dict[id(self)]
 
 class Cos(Unop):
-    """Cosine operation"""
+    """Trigonometric cosine."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -144,7 +160,7 @@ class Cos(Unop):
         return d_cache_dict[id(self)]
 
 class Tan(Unop):
-    """Tangent operation"""
+    """Trigonometric tangent."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -160,7 +176,7 @@ class Tan(Unop):
         return d_cache_dict[id(self)]
 
 class Sinh(Unop):
-    """Hyperbolic sine operation"""
+    """Hyperbolic sine."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -175,7 +191,7 @@ class Sinh(Unop):
         return d_cache_dict[id(self)]
 
 class Cosh(Unop):
-    """Hyperbolic cosine operation"""
+    """Hyperbolic cosine."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -190,7 +206,7 @@ class Cosh(Unop):
         return d_cache_dict[id(self)]
 
 class Tanh(Unop):
-    """Hyperbolic tangent operation"""
+    """Hyperbolic tangent."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -206,7 +222,7 @@ class Tanh(Unop):
         return d_cache_dict[id(self)]
 
 class Exp(Unop):
-    """Exponent operation"""
+    """Exponential function in base e."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -221,7 +237,7 @@ class Exp(Unop):
         return d_cache_dict[id(self)]
 
 class Power(Unop):
-    """Power operation in the form x ** n"""
+    """Power function, the input is raised to the power of exponent."""
     def __init__(self, expr1, exponent, grad=False):
         super().__init__(expr1=expr1, grad=grad)
         self.exponent = exponent
@@ -241,7 +257,9 @@ class Power(Unop):
         return d_cache_dict[id(self)]
 
 class Log(Unop):
-    """Logrithm operation"""
+    """Natural logarithm.
+    The natural logarithm log is the inverse of the exponential function, so
+    that log(exp(x)) = x. The natural logarithm is logarithm in base e."""
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
