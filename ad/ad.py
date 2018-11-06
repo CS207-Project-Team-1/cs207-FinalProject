@@ -134,6 +134,7 @@ class Sin(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Sin(x)
     >>> y.eval({x: 1.0})
@@ -159,6 +160,7 @@ class Cos(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Cos(x)
     >>> y.eval({x: 1.0})
@@ -184,6 +186,7 @@ class Tan(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Tan(x)
     >>> y.eval({x: 1.0})
@@ -210,6 +213,7 @@ class Sinh(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Sinh(x)
     >>> y.eval({x: 1.0})
@@ -235,6 +239,7 @@ class Cosh(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Cosh(x)
     >>> y.eval({x: 1.0})
@@ -260,6 +265,7 @@ class Tanh(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Tanh(x)
     >>> y.eval({x: 1.0})
@@ -286,6 +292,7 @@ class Exp(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Exp(x)
     >>> y.eval({x: 1.0})
@@ -311,6 +318,7 @@ class Power(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Power(x, 2)
     >>> y.eval({x: 10.0})
@@ -343,6 +351,7 @@ class Log(Unop):
 
     Examples
     --------
+    >>> import ad
     >>> x = ad.Variable('x')
     >>> y = ad.Log(x)
     >>> y.eval({x: 1.0})
