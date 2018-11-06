@@ -140,7 +140,7 @@ class Sin(Unop):
     >>> y.eval({x: 1.0})
     0.8414709848078965
     >>> y.d({x: 1.0})
-    0.5403023058681398
+    0.54030230586813977
     """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
@@ -164,7 +164,7 @@ class Cos(Unop):
     >>> x = ad.Variable('x')
     >>> y = ad.Cos(x)
     >>> y.eval({x: 1.0})
-    0.5403023058681398
+    0.54030230586813977
     >>> y.d({x: 1.0})
     -0.8414709848078965
     """
@@ -190,7 +190,7 @@ class Tan(Unop):
     >>> x = ad.Variable('x')
     >>> y = ad.Tan(x)
     >>> y.eval({x: 1.0})
-    1.557407724654902
+    1.5574077246549023
     >>> y.d({x: 1.0})
     3.425518820814759
     """
@@ -269,7 +269,7 @@ class Tanh(Unop):
     >>> x = ad.Variable('x')
     >>> y = ad.Tanh(x)
     >>> y.eval({x: 1.0})
-    0.7615941559557649
+    0.76159415595576485
     >>> y.d({x: 1.0})
     0.41997434161402614
     """
@@ -296,9 +296,9 @@ class Exp(Unop):
     >>> x = ad.Variable('x')
     >>> y = ad.Exp(x)
     >>> y.eval({x: 1.0})
-    2.718281828459045
+    2.7182818284590451
     >>> y.d({x: 1.0})
-    2.718281828459045
+    2.7182818284590451
     """
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
@@ -356,7 +356,7 @@ class Log(Unop):
     >>> y = ad.Log(x)
     >>> y.eval({x: 1.0})
     0.0
-    >>> y.d({x: 10.0})
+    >>> y.d({x: 1.0})
     1.0
     """
     def _eval(self, feed_dict, cache_dict):
