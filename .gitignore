@@ -11,3 +11,7 @@
 
 # Pytest
 *.pytest*
+
+# Pycharm
+*.xml
+*.iml

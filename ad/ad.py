@@ -113,6 +113,147 @@ class Unop(Expression):
         self.expr1 = expr1
         self.children = [self.expr1]
 
+class Sin(Unop):
+    """Sine operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.sin(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * np.cos(res1)
+        return d_cache_dict[id(self)]
+
+class Cos(Unop):
+    """Cosine operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.cos(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = - d1 * np.sin(res1)
+        return d_cache_dict[id(self)]
+
+class Tan(Unop):
+    """Tangent operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.tan(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            tan_tmp = np.tan(res1)
+            d_cache_dict[id(self)] = d1 * (1 + tan_tmp * tan_tmp)
+        return d_cache_dict[id(self)]
+
+class Sinh(Unop):
+    """Hyperbolic sine operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.sinh(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * np.cosh(res1)
+        return d_cache_dict[id(self)]
+
+class Cosh(Unop):
+    """Hyperbolic cosine operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.cosh(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * np.sinh(res1)
+        return d_cache_dict[id(self)]
+
+class Tanh(Unop):
+    """Hyperbolic tangent operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.tanh(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            tanh_tmp = np.tanh(res1)
+            d_cache_dict[id(self)] = d1 * (1 - tanh_tmp * tanh_tmp)
+        return d_cache_dict[id(self)]
+
+class Exp(Unop):
+    """Exponent operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.exp(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * np.exp(res1)
+        return d_cache_dict[id(self)]
+
+class Power(Unop):
+    """Power operation in the form x ** n"""
+    def __init__(self, expr1, exponent, grad=False):
+        super().__init__(expr1=expr1, grad=grad)
+        self.exponent = exponent
+
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.power(res1, self.exponent)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 * self.exponent \
+                                     * np.power(res1, self.exponent-1)
+        return d_cache_dict[id(self)]
+
+class Log(Unop):
+    """Logrithm operation"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.log(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[id(self)] = d1 / res1
+        return d_cache_dict[id(self)]
 
 class Binop(Expression):
     '''Utilities common to all binary operations in the form Op(a, b)'''
