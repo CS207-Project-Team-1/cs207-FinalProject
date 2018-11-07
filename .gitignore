@@ -1,6 +1,10 @@
 # Setuptools
 build
 
+# Development files
+.pytest_cache
+venv
+
 # Python
 *.pyc
 *__pycache__*
