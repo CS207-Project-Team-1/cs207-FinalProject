@@ -1,5 +1,9 @@
 import numpy as np
 
+__all__ = ['Expression', 'Variable', 'Sin', 'Cos', 'Tan',
+    'Sinh', 'Cosh', 'Tanh', 'Exp', 'Power', 'Log']
+
+
 class Expression(object):
     '''Base expression class that represents anything in our computational
     graph. Everything should be one of these.'''
