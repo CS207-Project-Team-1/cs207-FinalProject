@@ -14,6 +14,7 @@ repository and install the latest version directly.
 ```bash
 git clone https://github.com/CS207-Project-Team-1/cs207-FinalProject autodiffx
 cd autodiffx
+pip install -r requirements.txt
 python3 setup.py install
 ```
 
