@@ -2,11 +2,12 @@
 import ad
 import pytest
 from math import pi
+import numpy as np
 
 def test_cosine_expression():
     a = ad.Variable('a')
     b = ad.Cos(a)
-    assert b.eval({a: pi/2}) == 0
+    assert np.isclose(b.eval({a: pi/2}), 0)
 
 def test_sine_expression():
     a = ad.Variable('a')
