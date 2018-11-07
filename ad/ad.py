@@ -80,6 +80,9 @@ class Expression(object):
         except AttributeError:
             return Division(Constant(other), self, grad=self.grad)
 
+    def __neg__(self):
+        return Negation(self, grad=self.grad)
+
 
 class Variable(Expression):
     def __init__(self, name, grad=True):
@@ -168,6 +171,19 @@ class Power(Unop):
                                      * np.power(res1, self.exponent-1)
         return d_cache_dict[id(self)]
 
+class Negation(Unop):
+    """Negation, in the form - A"""
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = -res1
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = -d1
+        return d_cache_dict[id(self)]
 
 
 class Binop(Expression):
@@ -249,4 +265,3 @@ class Division(Binop):
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
             d_cache_dict[id(self)] = (d1 / res2) - (d2 * res1 / (res2 * res2))
         return d_cache_dict[id(self)]
-
