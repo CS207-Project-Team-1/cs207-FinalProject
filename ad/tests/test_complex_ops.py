@@ -11,7 +11,7 @@ def test_cosine_expression():
 
 def test_sine_expression():
     a = ad.Variable('a')
-    b = ad.Cos(a)
+    b = ad.Sin(a)
     assert np.isclose(b.eval({a: pi/2}), 1)
 
 def test_tan_expression():
