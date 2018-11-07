@@ -1,7 +1,6 @@
 """Tests for the basic, one dimensional binary and unary operations"""
 import ad
 import pytest
-from math import pi
 
 def test_constant_addition():
     a = ad.Constant(5)
@@ -91,9 +90,3 @@ def test_variable_division():
     d = b / a
     assert c.eval({a: 100, b: 2}) == 50
     assert d.eval({a: 10, b: 20}) == 2
-    
-def test_cosine_expression():
-    a = ad.Variable('a')
-    b = ad.Cos(a)
-    assert b.eval({a: pi/2}) == 1
-
