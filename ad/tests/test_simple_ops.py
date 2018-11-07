@@ -44,8 +44,6 @@ def test_variable_subtraction():
     d = b - a
     assert c.eval({a: 10, b: 2}) == 8
     assert d.eval({a: 10, b: 20}) == 10
-    assert c.d({a:100, b:2}) == 8
-    assert d.d({a:10, b:20}) == -10
 
 def test_constant_multiplication():
     a = ad.Constant(5)
@@ -69,8 +67,6 @@ def test_variable_multiplication():
     d = b * a
     assert c.eval({a: 100, b: 2}) == 200
     assert d.eval({a: 10, b: 20}) == 200
-    assert c.d({a:100, b:2}) == 102
-    assert d.d({a:10, b:20}) == 30
 
 def test_constant_division():
     a = ad.Constant(5)
@@ -94,8 +90,6 @@ def test_variable_division():
     d = b / a
     assert c.eval({a: 100, b: 2}) == 50
     assert d.eval({a: 10, b: 20}) == 2
-    assert c.d({a:100, b:2}) == -24.5
-    assert d.d({a:10, b:20}) == -0.1
 
 
 def test_variable_negation():
