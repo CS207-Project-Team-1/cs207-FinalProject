@@ -1,3 +1,6 @@
+# Setuptools
+build
+
 # Python
 *.pyc
 *__pycache__*
