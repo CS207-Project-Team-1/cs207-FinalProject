@@ -67,6 +67,8 @@ def test_variable_multiplication():
     d = b * a
     assert c.eval({a: 100, b: 2}) == 200
     assert d.eval({a: 10, b: 20}) == 200
+    assert c.d({a:100, b:2}) == -24.5
+    assert d.d({a:10, b:20}) == -0.1
 
 def test_constant_division():
     a = ad.Constant(5)
