@@ -90,3 +90,8 @@ def test_variable_division():
     d = b / a
     assert c.eval({a: 100, b: 2}) == 50
     assert d.eval({a: 10, b: 20}) == 2
+
+def test_variable_negation():
+    a = ad.Variable('a')
+    b = ad.Negation(a)
+    assert b.eval({a:1}) == -1
