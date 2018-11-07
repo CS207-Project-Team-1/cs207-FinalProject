@@ -44,6 +44,8 @@ def test_variable_subtraction():
     d = b - a
     assert c.eval({a: 10, b: 2}) == 8
     assert d.eval({a: 10, b: 20}) == 10
+    assert c.d({a:100, b:2}) == 8
+    assert d.d({a:10, b:20}) == -10
 
 def test_constant_multiplication():
     a = ad.Constant(5)
