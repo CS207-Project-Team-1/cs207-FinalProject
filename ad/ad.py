@@ -1,6 +1,7 @@
 import numpy as np
 
-__all__ = ['Expression', 'Variable', 'Sin', 'Cos', 'Tan',
+__all__ = ['Expression', 'Variable', 'Constant',
+    'Sin', 'Cos', 'Tan',
     'Sinh', 'Cosh', 'Tanh', 'Exp', 'Power', 'Log']
 
 
