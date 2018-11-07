@@ -1,6 +1,6 @@
 """Implementations of most simple trigonometic operations and other simple
 unops that are used frequently"""
-from ad import Unop
+from .ad import Unop
 import numpy as np
 
 __all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log']
