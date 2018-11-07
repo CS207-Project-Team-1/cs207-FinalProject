@@ -22,14 +22,14 @@ def test_tan_expression():
 def test_sinh_expression():
     a = ad.Variable('a')
     b = ad.Sinh(a)
-    assert b.eval({a: pi/4}) == 1
+    assert np.isclose(b.eval({a: pi/4}), 0.8686709614860095)
 
 def test_cosh_expression():
     a = ad.Variable('a')
     b = ad.Cosh(a)
-    assert b.eval({a: pi/4}) == 1
+    assert np.isclose(b.eval({a: pi/4}), 1.3246090892520057)
 
 def test_tanh_expression():
     a = ad.Variable('a')
     b = ad.Tanh(a)
-    assert b.eval({a: pi/4}) == 1
+    assert np.isclose(b.eval({a: pi/4}), 0.6557942026326724)
