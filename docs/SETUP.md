@@ -1,15 +1,10 @@
-# AutoDiffX - A Graph-Based Automatic Differentiation Package
+# Installing, Testing, and Setup
 
-[![Build Status](https://travis-ci.org/CS207-Project-Team-1/cs207-FinalProject.svg?branch=master)](https://travis-ci.org/CS207-Project-Team-1/cs207-FinalProject)
-[![Coverage Status](https://coveralls.io/repos/github/CS207-Project-Team-1/cs207-FinalProject/badge.svg?branch=master)](https://coveralls.io/github/CS207-Project-Team-1/cs207-FinalProject?branch=master)
+The following sections will guide you through the full setup. For those that
+will actively develop `autodiffx`, it is recommended to install from source
+and setup the testing suite.
 
-This is our CS207 Final Project implementing Automatic Differentiation. Our group has the following members:
-
-* Hanyu Jiang
-* Hugo Ramambason
-* William Fu
-
-## Installing and Setup
+## Installation
 
 ### Installing from Source
 
@@ -19,7 +14,6 @@ repository and install the latest version directly.
 ```bash
 git clone https://github.com/CS207-Project-Team-1/cs207-FinalProject autodiffx
 cd autodiffx
-pip install -r requirements.txt
 python3 setup.py install
 ```
 
