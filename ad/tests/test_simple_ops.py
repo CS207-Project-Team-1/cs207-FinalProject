@@ -90,7 +90,7 @@ def test_variable_division():
     d = b / a
     assert c.eval({a: 100, b: 2}) == 50
     assert d.eval({a: 10, b: 20}) == 2
-    assert c.d({a:100, b:2}) == 1
+    assert c.d({a:100, b:2}) == -24.5
     assert d.d({a:10, b:20}) == 1
 
 
