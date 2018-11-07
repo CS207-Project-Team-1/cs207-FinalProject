@@ -12,12 +12,12 @@ def test_cosine_expression():
 def test_sine_expression():
     a = ad.Variable('a')
     b = ad.Cos(a)
-    assert b.eval({a: pi/2}) == 1
+    assert np.isclose(b.eval({a: pi/2}), 1)
 
 def test_tan_expression():
     a = ad.Variable('a')
     b = ad.Tan(a)
-    assert b.eval({a: pi/4}) == 1
+    assert np.isclose(b.eval({a: pi/4}), 1)
 
 def test_sinh_expression():
     a = ad.Variable('a')
