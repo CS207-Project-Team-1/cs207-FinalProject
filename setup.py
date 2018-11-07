@@ -1,12 +1,22 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
-setup(name='autodiffx',
-    version='0.1',
-    description='Graph Based Automatic Differentiation Package',
-    author='Hugo Ramambason, Hanyu Jiang, William Fu',
-    author_email='wfu@college.harvard.edu',
-    url='https://github.com/CS207-Project-Team-1/cs207-FinalProject',
+setup(
+    name="AutoDiffX",
+    version="0.1",
     packages=['ad'],
+
+    # metadata to display on PyPI
+    author="William Fu",
+    author_email="wfu@college.harvard.edu",
+    description="Lightweight Package for Automatic Differentiation",
+    license="MIT",
+    keywords="automatic differentiation, differentiation",
+    url="https://github.com/CS207-Project-Team-1/cs207-FinalProject/",
+    project_urls={
+        "Bug Tracker": "https://github.com/CS207-Project-Team-1/cs207-FinalProject/",
+        "Documentation": "https://github.com/CS207-Project-Team-1/cs207-FinalProject/",
+        "Source Code": "https://github.com/CS207-Project-Team-1/cs207-FinalProject/",
+    }
 )

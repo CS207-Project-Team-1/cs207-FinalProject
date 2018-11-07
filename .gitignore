@@ -1,5 +1,8 @@
 # Setuptools
 build
+dist
+*.egg_info*
+*.egg-info*
 
 # Development files
 .pytest_cache
