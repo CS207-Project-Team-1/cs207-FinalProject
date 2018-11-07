@@ -94,5 +94,5 @@ def test_variable_division():
 
 def test_variable_negation():
     a = ad.Variable('a')
-    b = -a
+    b = ad.Negation(a)
     assert b.eval({a: 1}) == -1
