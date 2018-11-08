@@ -81,3 +81,8 @@ def test_variable_division():
     d = b / a
     assert c.d({a:100, b:2}) == -24.5
     assert d.d({a:10, b:20}) == -0.1
+
+
+def test_error():
+	x = 5
+	assert x.eval({x:5}) == NotImplementedError
