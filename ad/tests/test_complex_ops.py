@@ -85,4 +85,4 @@ def test_variable_division():
 
 def test_error():
 	x = 5
-	assert x.eval({x:5}) == NotImplementedError
+	assert x.eval({x:5}) == AttributeError
