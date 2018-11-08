@@ -4,7 +4,7 @@ here to support simple operator overloading.
 """
 import numpy as np
 
-__all__ = ['Expression', 'Variable', 'Constant', 'Power']
+__all__ = ['Expression', 'Variable', 'Constant']
 
 
 class Expression(object):
@@ -165,6 +165,14 @@ class Binop(Expression):
     '''Utilities common to all binary operations in the form Op(a, b)'''
     def __init__(self, expr1, expr2, grad=False):
         super().__init__(grad=grad)
+        try:
+            expr1.grad
+        except AttributeError:
+            expr1 = Constant(expr1)
+        try:
+            expr2.grad
+        except AttributeError:
+            expr2 = Constant(expr1)
         self.expr1 = expr1
         self.expr2 = expr2
         self.children = [self.expr1, self.expr2]
