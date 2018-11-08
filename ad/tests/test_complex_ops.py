@@ -61,11 +61,6 @@ def test_log_expression():
     assert np.isclose(b.eval({a: 5}), 1.6094379124341003)
     assert np.isclose(b.d({a: 5}), 0.2)
 
-def test_log_edge():
-    a = ad.Variable('a')
-    b = ad.Log(a)
-    assert b.eval({a: -1}) == nan
-
 def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a - b
