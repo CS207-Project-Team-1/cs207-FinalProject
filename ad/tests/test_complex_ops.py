@@ -47,6 +47,13 @@ def test_tanh_expression():
     assert np.isclose(b.eval({a: pi/4}), 0.6557942026326724)
     assert np.isclose(b.d({a: pi/4}), 0.5699339637933774)
 
+
+def test_exp_expression():
+    a = ad.Variable('a')
+    b = ad.Exp(a)
+    assert np.isclose(b.eval({a: 0}), 1)
+    assert np.isclose(b.d({a: 0}), 0)
+
 def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a - b
