@@ -83,6 +83,12 @@ class Expression(object):
     def __neg__(self):
         return Negation(self, grad=self.grad)
 
+    def __pow__(self, other):
+        try:
+            return Power(self, other, grad=(other.grad and self.grad))
+        except AttributeError:
+            return Power(self, Constant(other), grad=(self.grad))
+
 
 class Variable(Expression):
     def __init__(self, name, grad=True):
@@ -140,37 +146,6 @@ class Unop(Expression):
         self.children = [self.expr1]
 
 
-class Power(Unop):
-    """Power function, the input is raised to the power of exponent.
-
-    Examples
-    --------
-    >>> import ad
-    >>> x = ad.Variable('x')
-    >>> y = ad.Power(x, 2)
-    >>> y.eval({x: 10.0})
-    100.0
-    >>> y.d({x: 10.0})
-    20.0
-    """
-    def __init__(self, expr1, exponent, grad=False):
-        super().__init__(expr1=expr1, grad=grad)
-        self.exponent = exponent
-
-    def _eval(self, feed_dict, cache_dict):
-        if id(self) not in cache_dict:
-            res1 = self.expr1._eval(feed_dict, cache_dict)
-            cache_dict[id(self)] = np.power(res1, self.exponent)
-        return cache_dict[id(self)]
-
-    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        if id(self) not in d_cache_dict:
-            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
-            res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 * self.exponent \
-                                     * np.power(res1, self.exponent-1)
-        return d_cache_dict[id(self)]
-
 class Negation(Unop):
     """Negation, in the form - A"""
     def _eval(self, feed_dict, cache_dict):
@@ -193,6 +168,38 @@ class Binop(Expression):
         self.expr1 = expr1
         self.expr2 = expr2
         self.children = [self.expr1, self.expr2]
+
+
+class Power(Binop):
+    """Power function, the input is raised to the power of exponent.
+
+    Examples
+    --------
+    >>> import ad
+    >>> x = ad.Variable('x')
+    >>> y = ad.Power(x, 2)
+    >>> y.eval({x: 10.0})
+    100.0
+    >>> y.d({x: 10.0})
+    20.0
+    """
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            res2 = self.expr2._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.power(res1, res2)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        """derivative is  y x^(y-1) x_dot + x^y log(x) y_dot"""
+        if id(self) not in d_cache_dict:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            res2 = self.expr2._eval(feed_dict, e_cache_dict)
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = res2 * np.power(res1, res2 - 1) * d1 + \
+                np.power(res1, res2) * np.log(res1) * d2
+        return d_cache_dict[id(self)]
 
 
 class Addition(Binop):
