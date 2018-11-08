@@ -3,6 +3,7 @@ import ad
 import pytest
 from math import pi
 import numpy as np
+from types import *
 
 """
 def test_variable_negation():
