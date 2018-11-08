@@ -185,7 +185,7 @@ class Power(Binop):
     --------
     >>> import ad
     >>> x = ad.Variable('x')
-    >>> y = ad.Power(x, 2)
+    >>> y = x ** 2
     >>> y.eval({x: 10.0})
     100.0
     >>> y.d({x: 10.0})
