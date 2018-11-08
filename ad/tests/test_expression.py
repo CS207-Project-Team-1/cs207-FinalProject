@@ -24,3 +24,9 @@ def test_power():
     y = ad.Power(x, 3)
     assert y.eval({x: 10.0}) == 1000.0
     assert y.d({x: 10.0}) == 300.0
+
+def test_negation():
+    x = ad.Variable('x')
+    y = ad.Negation(x)
+    assert y.eval({x: 10.0}) == -10
+    assert y.d({x: 10.0}) == 0
