@@ -59,7 +59,7 @@ def test_log_expression():
     a = ad.Variable('a')
     b = ad.Log(a)
     assert np.isclose(b.eval({a: 5}), 1.6094379124341003)
-    assert np.isclose(b.d({a: 5}), 1.6094379124341003)
+    assert np.isclose(b.d({a: 5}), 0.2)
 
 def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
