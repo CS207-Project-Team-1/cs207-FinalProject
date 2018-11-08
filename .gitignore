@@ -25,3 +25,6 @@ venv
 # Pycharm
 *.xml
 *.iml
+
+# Jupyter notebook
+.ipynb_checkpoints/
