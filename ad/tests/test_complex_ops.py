@@ -54,6 +54,13 @@ def test_exp_expression():
     assert np.isclose(b.eval({a: 1}), 2.718281828459045)
     assert np.isclose(b.d({a: 1}), 2.718281828459045)
 
+
+def test_log_expression():
+    a = ad.Variable('a')
+    b = ad.Log(a)
+    assert np.isclose(b.eval({a: 5}), 2.718281828459045)
+    assert np.isclose(b.d({a: 5}), 2.718281828459045)
+
 def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a - b
