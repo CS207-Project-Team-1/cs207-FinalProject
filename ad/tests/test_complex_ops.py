@@ -51,8 +51,8 @@ def test_tanh_expression():
 def test_exp_expression():
     a = ad.Variable('a')
     b = ad.Exp(a)
-    assert np.isclose(b.eval({a: 0}), 1)
-    assert np.isclose(b.d({a: 0}), 0)
+    assert np.isclose(b.eval({a: 1}), 1)
+    assert np.isclose(b.d({a: 1}), 0)
 
 def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
