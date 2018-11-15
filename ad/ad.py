@@ -91,9 +91,11 @@ class Expression(object):
 
 
 class Variable(Expression):
-    def __init__(self, name, grad=True):
+    def __init__(self, name=None, grad=True):
         self.grad = grad
         self.name = name
+        # A variable only depends on itself
+        self.dep_vars = set([self])
     
     def _eval(self, feed_dict, cache_dict):
         # Check if the user specified either the object in feed_dict or
@@ -114,6 +116,7 @@ class Constant(Expression):
     def __init__(self, val, grad=False):
         super().__init__(grad=grad)
         self.val = val
+        self.dep_vars = set()
     
     def _eval(self, feed_dict, cache_dict):
         return self.val
@@ -144,6 +147,8 @@ class Unop(Expression):
         super().__init__(grad=grad)
         self.expr1 = expr1
         self.children = [self.expr1]
+        # Deep copy the set
+        self.dep_vars = set(expr1.dep_vars)
 
 
 class Negation(Unop):
@@ -176,6 +181,7 @@ class Binop(Expression):
         self.expr1 = expr1
         self.expr2 = expr2
         self.children = [self.expr1, self.expr2]
+        self.dep_vars = expr1.dep_vars | expr2.dep_vars
 
 
 class Power(Binop):
