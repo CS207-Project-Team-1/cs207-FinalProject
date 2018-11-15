@@ -25,7 +25,16 @@ class Expression(object):
 
     def d(self, feed_dict):
         '''Evaluates the derivative at the points given, returns to user'''
-        return self._d(feed_dict, dict(), dict())
+        res =  self._d(feed_dict, dict(), dict())
+        if len(self.dep_vars) == 0:
+            # No dependent variables - it is a constant
+            return 0
+        if len(res) == 1:
+            # This is the non-vectorized case, scalar func of scalar
+            # Return a number, not a dictionary
+            return list(res.values())[0]
+
+        return res
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         '''Helper - Evaluates the differentiation products recursively.
@@ -93,7 +102,8 @@ class Expression(object):
 class Variable(Expression):
     def __init__(self, name=None, grad=True):
         self.grad = grad
-        self.name = name
+        if name:
+            self.name = str(name)
         # A variable only depends on itself
         self.dep_vars = set([self])
     
@@ -108,7 +118,13 @@ class Variable(Expression):
             raise ValueError('Unbound variable %s' % self.name)
     
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        return 1.0 
+        return {self: 1.0}
+
+    def __repr__(self):
+        if self.name:
+            return self.name
+        else:
+            return "Var"
 
 
 class Constant(Expression):
@@ -122,7 +138,7 @@ class Constant(Expression):
         return self.val
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        return 0
+        return {}
 
 
 class Unop(Expression):
@@ -229,7 +245,10 @@ class Addition(Binop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = d1 + d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) + d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
             
 
