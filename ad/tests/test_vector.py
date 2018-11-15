@@ -43,7 +43,7 @@ def test_variable_inheritance_three():
     z = ad.Variable()
 
     f = ad.Cos(x) * y
-    g = ad.Sin(f) + z * z * ad.Log(z)
+    g = ad.Sin(f) + z * z * ad.Log(z) + 1
     assert(x in f.dep_vars)
     assert(y in f.dep_vars)
     assert(len(f.dep_vars) == 2)
