@@ -27,7 +27,7 @@ class Expression(object):
         '''Evaluates the derivative at the points given, returns to user'''
         res =  self._d(feed_dict, dict(), dict())
         if len(self.dep_vars) == 0:
-            # No dependent variables - it is a constant
+            # No dependent variables - it is a constantb
             return 0
         if len(res) == 1:
             # This is the non-vectorized case, scalar func of scalar
@@ -178,7 +178,10 @@ class Negation(Unop):
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = -d1
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = -d1.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -227,8 +230,11 @@ class Power(Binop):
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = res2 * np.power(res1, res2 - 1) * d1 + \
-                np.power(res1, res2) * np.log(res1) * d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = res2 * np.power(res1, res2 - 1) * d1.get(var, 0) + \
+                           np.power(res1, res2) * np.log(res1) * d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -265,7 +271,10 @@ class Subtraction(Binop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = d1 - d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) - d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -284,7 +293,10 @@ class Multiplication(Binop):
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = res1 * d2 + res2 * d1
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = res1 * d2.get(var, 0) + res2 * d1.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -303,5 +315,9 @@ class Division(Binop):
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = (d1 / res2) - (d2 * res1 / (res2 * res2))
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = (d1.get(var, 0) / res2) - (d2.get(var, 0) * res1 /
+                                                      (res2 * res2))
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]

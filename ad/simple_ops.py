@@ -29,7 +29,10 @@ class Sin(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 * np.cos(res1)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * np.cos(res1)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Cos(Unop):
@@ -55,7 +58,10 @@ class Cos(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = - d1 * np.sin(res1)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = - d1.get(var, 0) * np.sin(res1)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Tan(Unop):
@@ -82,7 +88,10 @@ class Tan(Unop):
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             tan_tmp = np.tan(res1)
-            d_cache_dict[id(self)] = d1 * (1 + tan_tmp * tan_tmp)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * (1 + tan_tmp * tan_tmp)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Sinh(Unop):
@@ -108,7 +117,10 @@ class Sinh(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 * np.cosh(res1)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * np.cosh(res1)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Cosh(Unop):
@@ -134,7 +146,10 @@ class Cosh(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 * np.sinh(res1)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * np.sinh(res1)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Tanh(Unop):
@@ -161,7 +176,10 @@ class Tanh(Unop):
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             tanh_tmp = np.tanh(res1)
-            d_cache_dict[id(self)] = d1 * (1 - tanh_tmp * tanh_tmp)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * (1 - tanh_tmp * tanh_tmp)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 class Exp(Unop):
@@ -187,7 +205,10 @@ class Exp(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 * np.exp(res1)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) * np.exp(res1)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -216,5 +237,8 @@ class Log(Unop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = d1 / res1
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) / res1
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
