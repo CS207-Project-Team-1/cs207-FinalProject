@@ -24,3 +24,33 @@ def test_vector_constant_subtraction():
     b = ad.Constant(3.0 * np.ones(10))
     c = a - b
     assert equals(c.eval({}), - np.ones(10))
+
+def test_variable_inheritance():
+    x = ad.Variable()
+    y = ad.Variable()
+
+    f = x * y
+    assert(x in f.dep_vars)
+    assert(y in f.dep_vars)
+    assert(len(f.dep_vars) == 2)
+    assert(y not in x.dep_vars)
+    assert(x not in y.dep_vars)
+
+
+def test_variable_inheritance_three():
+    x = ad.Variable()
+    y = ad.Variable()
+    z = ad.Variable()
+
+    f = ad.Cos(x) * y
+    g = ad.Sin(f) + z * z * ad.Log(z) + 1
+    assert(x in f.dep_vars)
+    assert(y in f.dep_vars)
+    assert(len(f.dep_vars) == 2)
+    assert(y not in x.dep_vars)
+    assert(x not in y.dep_vars)
+    assert(len(g.dep_vars) == 3)
+    assert(x in g.dep_vars)
+    assert(y in g.dep_vars)
+    assert(z in g.dep_vars)
+    assert(z not in f.dep_vars)

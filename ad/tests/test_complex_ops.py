@@ -58,26 +58,26 @@ def test_variable_subtraction_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a - b
     d = b - a
-    assert c.d({a:100, b:2}) == 0
-    assert d.d({a:10, b:20}) == 0
+    assert c.d({a:100, b:2}) == {a:1.0, b:-1.0}
+    assert d.d({a:10, b:20}) == {a:-1.0, b:1.0}
 
 def test_variable_addition_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a + b
     d = b + a
-    assert c.d({a:100, b:2}) == 2
-    assert d.d({a:10, b:20}) == 2
+    assert c.d({a:100, b:2}) == {a:1.0, b:1.0}
+    assert d.d({a:10, b:20}) == {a:1.0, b:1.0}
 
 def test_variable_multiplication_derivative():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a * b
     d = b * a
-    assert c.d({a:100, b:2}) == 102
-    assert d.d({a:10, b:20}) == 30
+    assert c.d({a:100, b:2}) == {a:2, b:100}
+    assert d.d({a:10, b:20}) == {a:20, b:10}
 
 def test_variable_division():
     a, b = ad.Variable('a'), ad.Variable('b')
     c = a / b
     d = b / a
-    assert c.d({a:100, b:2}) == -24.5
-    assert d.d({a:10, b:20}) == -0.1
+    assert c.d({a:100, b:2}) == {a:0.5, b:-25.0}
+    assert d.d({a:10, b:20}) == {a:-0.2, b:0.1}

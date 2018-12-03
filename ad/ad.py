@@ -25,7 +25,16 @@ class Expression(object):
 
     def d(self, feed_dict):
         '''Evaluates the derivative at the points given, returns to user'''
-        return self._d(feed_dict, dict(), dict())
+        res =  self._d(feed_dict, dict(), dict())
+        if len(self.dep_vars) == 0:
+            # No dependent variables - it is a constantb
+            return 0
+        if len(res) == 1:
+            # This is the non-vectorized case, scalar func of scalar
+            # Return a number, not a dictionary
+            return list(res.values())[0]
+
+        return res
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         '''Helper - Evaluates the differentiation products recursively.
@@ -91,9 +100,12 @@ class Expression(object):
 
 
 class Variable(Expression):
-    def __init__(self, name, grad=True):
+    def __init__(self, name=None, grad=True):
         self.grad = grad
-        self.name = name
+        if name:
+            self.name = str(name)
+        # A variable only depends on itself
+        self.dep_vars = set([self])
     
     def _eval(self, feed_dict, cache_dict):
         # Check if the user specified either the object in feed_dict or
@@ -106,7 +118,13 @@ class Variable(Expression):
             raise ValueError('Unbound variable %s' % self.name)
     
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        return 1.0 
+        return {self: 1.0}
+
+    def __repr__(self):
+        if self.name:
+            return self.name
+        else:
+            return "Var"
 
 
 class Constant(Expression):
@@ -114,12 +132,13 @@ class Constant(Expression):
     def __init__(self, val, grad=False):
         super().__init__(grad=grad)
         self.val = val
+        self.dep_vars = set()
     
     def _eval(self, feed_dict, cache_dict):
         return self.val
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        return 0
+        return {}
 
 
 class Unop(Expression):
@@ -144,6 +163,8 @@ class Unop(Expression):
         super().__init__(grad=grad)
         self.expr1 = expr1
         self.children = [self.expr1]
+        # Deep copy the set
+        self.dep_vars = set(expr1.dep_vars)
 
 
 class Negation(Unop):
@@ -157,7 +178,10 @@ class Negation(Unop):
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = -d1
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = -d1.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -176,6 +200,7 @@ class Binop(Expression):
         self.expr1 = expr1
         self.expr2 = expr2
         self.children = [self.expr1, self.expr2]
+        self.dep_vars = expr1.dep_vars | expr2.dep_vars
 
 
 class Power(Binop):
@@ -205,8 +230,11 @@ class Power(Binop):
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = res2 * np.power(res1, res2 - 1) * d1 + \
-                np.power(res1, res2) * np.log(res1) * d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = res2 * np.power(res1, res2 - 1) * d1.get(var, 0) + \
+                           np.power(res1, res2) * np.log(res1) * d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -223,7 +251,10 @@ class Addition(Binop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = d1 + d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) + d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
             
 
@@ -240,7 +271,10 @@ class Subtraction(Binop):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[id(self)] = d1 - d2
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) - d2.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -259,7 +293,10 @@ class Multiplication(Binop):
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = res1 * d2 + res2 * d1
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = res1 * d2.get(var, 0) + res2 * d1.get(var, 0)
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
 
@@ -278,5 +315,9 @@ class Division(Binop):
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             res2 = self.expr2._eval(feed_dict, e_cache_dict)
-            d_cache_dict[id(self)] = (d1 / res2) - (d2 * res1 / (res2 * res2))
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = (d1.get(var, 0) / res2) - (d2.get(var, 0) * res1 /
+                                                      (res2 * res2))
+            d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
