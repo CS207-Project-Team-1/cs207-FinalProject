@@ -261,13 +261,13 @@ class Power(Binop):
 
     def _d_expr(self):
         if isinstance(self.expr1, Constant):
-            return np.log(self.expr1.val) * self
+            return np.log(self.expr1.val) * (self.expr1 ** self.expr2)
         elif isinstance(self.expr2, Constant):
             return self.expr2.val * (self.expr1 ** (self.expr2.val - 1))
         else:
             return self.expr2 * (self.expr1 ** (self.expr2 - 1)) * \
-                   self.expr1._d_expr() + self * Log(self.exp1) * \
-                   self.expr2._d_expr()
+                   self.expr1._d_expr() + (self.expr1 ** self.expr2) * \
+                   Log(self.exp1) * self.expr2._d_expr()
 
 
 class Addition(Binop):

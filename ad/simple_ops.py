@@ -36,7 +36,7 @@ class Sin(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return Cos(self.expr1)
+        return Cos(self.expr1) * self.expr1._d_expr()
 
 
 class Cos(Unop):
@@ -69,7 +69,7 @@ class Cos(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return - Sin(self.expr1)
+        return - Sin(self.expr1) * self.expr1._d_expr()
 
 
 class Tan(Unop):
@@ -103,7 +103,7 @@ class Tan(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return 1.0 / (Cos(self.expr1) * Cos(self.expr1))
+        return 1.0 / (Cos(self.expr1) * Cos(self.expr1)) * self.expr1._d_expr()
 
 
 class Sinh(Unop):
@@ -136,7 +136,7 @@ class Sinh(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return Cosh(self.expr1)
+        return Cosh(self.expr1) * self.expr1._d_expr()
 
 
 class Cosh(Unop):
@@ -169,7 +169,7 @@ class Cosh(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return Sinh(self.expr1)
+        return Sinh(self.expr1) * self.expr1._d_expr()
 
 
 class Tanh(Unop):
@@ -203,7 +203,8 @@ class Tanh(Unop):
         return d_cache_dict[id(self)]
 
     def _d_expr(self):
-        return 1.0 / (Cosh(self.expr1) * Cosh(self.expr1))
+        return 1.0 / (Cosh(self.expr1) * Cosh(self.expr1)) * \
+               self.expr1._d_expr()
 
 
 class Exp(Unop):
