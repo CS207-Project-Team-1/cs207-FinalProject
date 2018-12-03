@@ -341,6 +341,7 @@ class Subtraction(Binop):
                     dxy2 = h2.get(var1, {}).get(var2, 0) 
                     ret[var1][var2] = dxy1 - dxy2
             h_cache[id(self)] = ret
+        return h_cache[id(self)]
 
 
 class Multiplication(Binop):
