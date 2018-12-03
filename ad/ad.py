@@ -4,7 +4,7 @@ here to support simple operator overloading.
 """
 import numpy as np
 
-__all__ = ['Expression', 'Variable', 'Constant']
+__all__ = ['Expression', 'Variable', 'Constant', 'Log']
 
 
 class Expression(object):
@@ -42,6 +42,19 @@ class Expression(object):
         @param: e_cache_dict: cache for previously evaluated values
         @param: d_cache_dict: cache for previously calculated derivatives
         '''
+        raise NotImplementedError
+
+    def d_expr(self, n=1):
+        """Return n-th order derivative as an Expression.
+        Scalar input only.
+        """
+        di = self
+        for i in range(n):
+            di = di._d_expr()
+        return di
+
+    def _d_expr(self):
+        """Helper - Evaluates the derivative as an Expression."""
         raise NotImplementedError
 
     def __add__(self, other):
@@ -120,6 +133,9 @@ class Variable(Expression):
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {self: 1.0}
 
+    def _d_expr(self):
+        return Constant(1.0)
+
     def __repr__(self):
         if self.name:
             return self.name
@@ -139,6 +155,9 @@ class Constant(Expression):
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {}
+
+    def _d_expr(self):
+        return Constant(0.0)
 
 
 class Unop(Expression):
@@ -183,6 +202,9 @@ class Negation(Unop):
                 ret[var] = -d1.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        return - self.expr1._d_expr()
 
 
 class Binop(Expression):
@@ -237,6 +259,16 @@ class Power(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        if isinstance(self.expr1, Constant):
+            return np.log(self.expr1.val) * self
+        elif isinstance(self.expr2, Constant):
+            return self.expr2.val * (self.expr1 ** (self.expr2.val - 1))
+        else:
+            return self.expr2 * (self.expr1 ** (self.expr2 - 1)) * \
+                   self.expr1._d_expr() + self * Log(self.exp1) * \
+                   self.expr2._d_expr()
+
 
 class Addition(Binop):
     '''Addition, in the form A + B'''
@@ -256,7 +288,10 @@ class Addition(Binop):
                 ret[var] = d1.get(var, 0) + d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
-            
+
+    def _d_expr(self):
+        return self.expr1._d_expr() + self.expr2._d_expr()
+
 
 class Subtraction(Binop):
     '''Subtraction, in the form A - B'''
@@ -276,6 +311,9 @@ class Subtraction(Binop):
                 ret[var] = d1.get(var, 0) - d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        return self.expr1._d_expr() - self.expr2._d_expr()
 
 
 class Multiplication(Binop):
@@ -299,6 +337,15 @@ class Multiplication(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        if isinstance(self.expr1, Constant):
+            return self.expr1.val * self.expr2._d_expr()
+        elif isinstance(self.expr2, Constant):
+            return self.expr2.val * self.expr1._d_expr()
+        else:
+            return self.expr1 * self.expr2._d_expr() + self.expr2 * \
+                   self.expr1._d_expr()
+
 
 class Division(Binop):
     '''Division, in the form A / B'''
@@ -321,3 +368,48 @@ class Division(Binop):
                                                       (res2 * res2))
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        if isinstance(self.expr1, Constant):
+            return - self.expr1.val * self.expr2._d_expr() / (self.expr2 *
+                                                              self.expr2)
+        elif isinstance(self.expr2, Constant):
+            return self.expr1._d_expr() * (1.0 / self.expr2.val)
+        else:
+            return self.expr1._d_expr() / self.expr2 - self.expr1 * \
+                   self.expr2._d_expr() / (self.expr2 * self.expr2)
+
+
+class Log(Unop):
+    """Natural logarithm.
+    The natural logarithm log is the inverse of the exponential function, so
+    that log(exp(x)) = x. The natural logarithm is logarithm in base e.
+
+    Examples
+    --------
+    >>> import ad
+    >>> x = ad.Variable('x')
+    >>> y = ad.Log(x)
+    >>> y.eval({x: 1.0})
+    0.0
+    >>> y.d({x: 1.0})
+    1.0
+    """
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.log(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) / res1
+            d_cache_dict[id(self)] = ret
+        return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        return 1.0 / self.expr1 * self.expr1._d_expr()

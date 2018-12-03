@@ -3,7 +3,7 @@ unops that are used frequently"""
 from .ad import Unop
 import numpy as np
 
-__all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log']
+__all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp']
 
 
 class Sin(Unop):
@@ -35,6 +35,10 @@ class Sin(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        return Cos(self.expr1)
+
+
 class Cos(Unop):
     """Trigonometric cosine.
 
@@ -63,6 +67,10 @@ class Cos(Unop):
                 ret[var] = - d1.get(var, 0) * np.sin(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        return - Sin(self.expr1)
+
 
 class Tan(Unop):
     """Trigonometric tangent.
@@ -94,6 +102,10 @@ class Tan(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        return 1.0 / (Cos(self.expr1) * Cos(self.expr1))
+
+
 class Sinh(Unop):
     """Hyperbolic sine.
 
@@ -123,6 +135,10 @@ class Sinh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        return Cosh(self.expr1)
+
+
 class Cosh(Unop):
     """Hyperbolic cosine.
 
@@ -151,6 +167,10 @@ class Cosh(Unop):
                 ret[var] = d1.get(var, 0) * np.sinh(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self):
+        return Sinh(self.expr1)
+
 
 class Tanh(Unop):
     """Hyperbolic tangent.
@@ -182,6 +202,10 @@ class Tanh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self):
+        return 1.0 / (Cosh(self.expr1) * Cosh(self.expr1))
+
+
 class Exp(Unop):
     """Exponential function in base e.
 
@@ -211,34 +235,5 @@ class Exp(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-
-class Log(Unop):
-    """Natural logarithm.
-    The natural logarithm log is the inverse of the exponential function, so
-    that log(exp(x)) = x. The natural logarithm is logarithm in base e.
-
-    Examples
-    --------
-    >>> import ad
-    >>> x = ad.Variable('x')
-    >>> y = ad.Log(x)
-    >>> y.eval({x: 1.0})
-    0.0
-    >>> y.d({x: 1.0})
-    1.0
-    """
-    def _eval(self, feed_dict, cache_dict):
-        if id(self) not in cache_dict:
-            res1 = self.expr1._eval(feed_dict, cache_dict)
-            cache_dict[id(self)] = np.log(res1)
-        return cache_dict[id(self)]
-
-    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        if id(self) not in d_cache_dict:
-            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
-            res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            ret = {}
-            for var in self.dep_vars:
-                ret[var] = d1.get(var, 0) / res1
-            d_cache_dict[id(self)] = ret
-        return d_cache_dict[id(self)]
+    def _d_expr(self):
+        return self * self.expr1._d_expr()
