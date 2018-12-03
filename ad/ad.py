@@ -102,8 +102,8 @@ class Expression(object):
 class Variable(Expression):
     def __init__(self, name=None, grad=True):
         self.grad = grad
-        if name:
-            self.name = str(name)
+        self.name = None if not name else str(name)
+
         # A variable only depends on itself
         self.dep_vars = set([self])
     
