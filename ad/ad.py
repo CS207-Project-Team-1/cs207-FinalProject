@@ -43,6 +43,27 @@ class Expression(object):
         @param: d_cache_dict: cache for previously calculated derivatives
         '''
         raise NotImplementedError
+    
+    def hessian(self, feed_dict):
+        '''Evaluates the hessian at the points given, returns to user as a 
+        dictionary of dictionarys (to be indexed as [var1][var2] for the
+        derivative with respect to var1 then var2)'''
+        res = self._h(feed_dict, dict(), dict(), dict())
+        return res
+        # if len(self.dep_vars) == 0:
+        #     return 0
+        # elif len(self.dep_vars) == 1:
+        #     # This is the 1D hessian case, so just a scalar
+        #     return list(res.values())[0]
+
+    def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
+        '''Helper - Evaluates the differentiation products recursively.
+        @param: feed_dict: dictionary mapping var names 
+        @param: e_cache_dict: cache for previously evaluated values
+        @param: d_cache_dict: cache for previously calculated derivatives
+        @param: h_cache_dict: cache for previously calculated double derivatives 
+        '''
+        return NotImplementedError
 
     def __add__(self, other):
         try:
@@ -119,6 +140,9 @@ class Variable(Expression):
     
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {self: 1.0}
+    
+    def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
+        return {self: {self: 0}}
 
     def __repr__(self):
         if self.name:
@@ -138,6 +162,9 @@ class Constant(Expression):
         return self.val
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        return {}
+
+    def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
         return {}
 
 
@@ -183,6 +210,17 @@ class Negation(Unop):
                 ret[var] = -d1.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+    
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the negations too
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    ret[var1][var2] = - h1.get(var1, {}).get(var2, 0)
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
 
 
 class Binop(Expression):
@@ -256,6 +294,20 @@ class Addition(Binop):
                 ret[var] = d1.get(var, 0) + d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+    
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            h2 = self.expr2._h(feed_dict, e_cache, d_cache, h_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    dxy2 = h2.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = dxy1 + dxy2
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
             
 
 class Subtraction(Binop):
@@ -276,6 +328,19 @@ class Subtraction(Binop):
                 ret[var] = d1.get(var, 0) - d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            h2 = self.expr2._h(feed_dict, e_cache, d_cache, h_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    dxy2 = h2.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = dxy1 - dxy2
+            h_cache[id(self)] = ret
 
 
 class Multiplication(Binop):
@@ -298,6 +363,26 @@ class Multiplication(Binop):
                 ret[var] = res1 * d2.get(var, 0) + res2 * d1.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+    
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            h2 = self.expr2._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            d2 = self.expr2._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            v2 = self.expr2._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    dxy2 = h2.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = (d1.get(var1, 0) * d2.get(var2, 0) + 
+                        d1.get(var2, 0) * d2.get(var1, 0) +
+                        v1 * dxy2 + v2 * dxy1)
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
 
 
 class Division(Binop):
@@ -321,3 +406,26 @@ class Division(Binop):
                                                       (res2 * res2))
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            h2 = self.expr2._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            d2 = self.expr2._d(feed_dict, e_cache, d_cache)
+            f = self.expr1._eval(feed_dict, e_cache)
+            g = self.expr2._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    fxy = h1.get(var1, {}).get(var2, 0) 
+                    gxy = h2.get(var1, {}).get(var2, 0) 
+                    fx, fy = d1.get(var1, 0), d1.get(var2, 0)
+                    gx, gy = d2.get(var1, 0), d2.get(var2, 0)
+                    term1 = - (gx * fy + gy * fx) / (g ** 2)
+                    term2 = (2 * f * gy * gx) / (g ** 3)
+                    term3 = (fxy / g) - (f * gxy) / (g ** 2)
+                    ret[var1][var2] = term1 + term2 + term3
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
