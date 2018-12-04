@@ -4,7 +4,7 @@ here to support simple operator overloading.
 """
 import numpy as np
 
-__all__ = ['Expression', 'Variable', 'Constant', 'Log']
+__all__ = ['Expression', 'Variable', 'Constant']
 
 
 class Expression(object):
