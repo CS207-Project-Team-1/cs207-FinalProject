@@ -272,9 +272,8 @@ class Power(Binop):
         elif isinstance(self.expr2, Constant):
             return self.expr2.val * (self.expr1 ** (self.expr2.val - 1))
         else:
-            return self.expr2 * (self.expr1 ** (self.expr2 - 1)) * \
-                   self.expr1._d_expr(var) + (self.expr1 ** self.expr2) * \
-                   Log(self.exp1) * self.expr2._d_expr(var)
+            msg = "Do not Support f(x) ** g(x)"
+            raise NotImplementedError(msg)
 
 
 class Addition(Binop):
@@ -393,40 +392,3 @@ class Division(Binop):
         else:
             return self.expr1._d_expr(var) / self.expr2 - self.expr1 * \
                    self.expr2._d_expr(var) / (self.expr2 * self.expr2)
-
-
-class Log(Unop):
-    """Natural logarithm.
-    The natural logarithm log is the inverse of the exponential function, so
-    that log(exp(x)) = x. The natural logarithm is logarithm in base e.
-
-    Examples
-    --------
-    >>> import ad
-    >>> x = ad.Variable('x')
-    >>> y = ad.Log(x)
-    >>> y.eval({x: 1.0})
-    0.0
-    >>> y.d({x: 1.0})
-    1.0
-    """
-    def _eval(self, feed_dict, cache_dict):
-        if id(self) not in cache_dict:
-            res1 = self.expr1._eval(feed_dict, cache_dict)
-            cache_dict[id(self)] = np.log(res1)
-        return cache_dict[id(self)]
-
-    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
-        if id(self) not in d_cache_dict:
-            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
-            res1 = self.expr1._eval(feed_dict, e_cache_dict)
-            ret = {}
-            for var in self.dep_vars:
-                ret[var] = d1.get(var, 0) / res1
-            d_cache_dict[id(self)] = ret
-        return d_cache_dict[id(self)]
-
-    def _d_expr(self, var):
-        if var not in self.dep_vars:
-            return Constant(0)
-        return Constant(1.0) / self.expr1 * self.expr1._d_expr(var)
