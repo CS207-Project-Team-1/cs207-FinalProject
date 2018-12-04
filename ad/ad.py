@@ -49,12 +49,13 @@ class Expression(object):
         dictionary of dictionarys (to be indexed as [var1][var2] for the
         derivative with respect to var1 then var2)'''
         res = self._h(feed_dict, dict(), dict(), dict())
-        return res
-        # if len(self.dep_vars) == 0:
-        #     return 0
-        # elif len(self.dep_vars) == 1:
-        #     # This is the 1D hessian case, so just a scalar
-        #     return list(res.values())[0]
+        if len(self.dep_vars) == 0:
+            return 0
+        elif len(self.dep_vars) == 1:
+            # This is the 1D hessian case, so just a scalar
+            return list(list(res.values())[0].values())[0]
+        else:
+            return res
 
     def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
         '''Helper - Evaluates the differentiation products recursively.
