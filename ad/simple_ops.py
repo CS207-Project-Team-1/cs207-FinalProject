@@ -1,6 +1,6 @@
 """Implementations of most simple trigonometic operations and other simple
 unops that are used frequently"""
-from .ad import Unop
+from .ad import Unop, Constant
 import numpy as np
 
 __all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp']
@@ -35,8 +35,10 @@ class Sin(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return Cos(self.expr1) * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Cos(self.expr1) * self.expr1._d_expr(var)
 
 
 class Cos(Unop):
@@ -68,8 +70,10 @@ class Cos(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return - Sin(self.expr1) * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return - Sin(self.expr1) * self.expr1._d_expr(var)
 
 
 class Tan(Unop):
@@ -102,8 +106,11 @@ class Tan(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return 1.0 / (Cos(self.expr1) * Cos(self.expr1)) * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / (Cos(self.expr1) * Cos(self.expr1)) * \
+               self.expr1._d_expr(var)
 
 
 class Sinh(Unop):
@@ -135,8 +142,10 @@ class Sinh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return Cosh(self.expr1) * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(var)
+        return Cosh(self.expr1) * self.expr1._d_expr(var)
 
 
 class Cosh(Unop):
@@ -168,8 +177,10 @@ class Cosh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return Sinh(self.expr1) * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Sinh(self.expr1) * self.expr1._d_expr(var)
 
 
 class Tanh(Unop):
@@ -202,9 +213,11 @@ class Tanh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
         return 1.0 / (Cosh(self.expr1) * Cosh(self.expr1)) * \
-               self.expr1._d_expr()
+               self.expr1._d_expr(var)
 
 
 class Exp(Unop):
@@ -236,5 +249,7 @@ class Exp(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return self * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self * self.expr1._d_expr(var)

@@ -13,6 +13,7 @@ class Expression(object):
     def __init__(self, grad=False):
         self.grad = grad
         self.children = []
+        self.dep_vars = set()
 
     def eval(self, feed_dict):
         '''Evaluates the entire computation graph given a dictionary of
@@ -48,13 +49,14 @@ class Expression(object):
         """Return n-th order derivative as an Expression.
         Scalar input only.
         """
+        var = list(self.dep_vars)[0]
         di = self
         for i in range(n):
-            di = di._d_expr()
+            di = di._d_expr(var)
         return di
 
-    def _d_expr(self):
-        """Helper - Evaluates the derivative as an Expression."""
+    def _d_expr(self, var):
+        """Helper - Evaluates the partial derivative as an Expression."""
         raise NotImplementedError
 
     def __add__(self, other):
@@ -133,8 +135,11 @@ class Variable(Expression):
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {self: 1.0}
 
-    def _d_expr(self):
-        return Constant(1.0)
+    def _d_expr(self, var):
+        if var == self:
+            return Constant(1.0)
+        else:
+            return Constant(0)
 
     def __repr__(self):
         if self.name:
@@ -156,7 +161,7 @@ class Constant(Expression):
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {}
 
-    def _d_expr(self):
+    def _d_expr(self, var):
         return Constant(0.0)
 
 
@@ -203,8 +208,8 @@ class Negation(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return - self.expr1._d_expr()
+    def _d_expr(self, var):
+        return - self.expr1._d_expr(var)
 
 
 class Binop(Expression):
@@ -259,15 +264,17 @@ class Power(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
         if isinstance(self.expr1, Constant):
             return np.log(self.expr1.val) * (self.expr1 ** self.expr2)
         elif isinstance(self.expr2, Constant):
             return self.expr2.val * (self.expr1 ** (self.expr2.val - 1))
         else:
             return self.expr2 * (self.expr1 ** (self.expr2 - 1)) * \
-                   self.expr1._d_expr() + (self.expr1 ** self.expr2) * \
-                   Log(self.exp1) * self.expr2._d_expr()
+                   self.expr1._d_expr(var) + (self.expr1 ** self.expr2) * \
+                   Log(self.exp1) * self.expr2._d_expr(var)
 
 
 class Addition(Binop):
@@ -289,8 +296,10 @@ class Addition(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return self.expr1._d_expr() + self.expr2._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self.expr1._d_expr(var) + self.expr2._d_expr(var)
 
 
 class Subtraction(Binop):
@@ -312,8 +321,10 @@ class Subtraction(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return self.expr1._d_expr() - self.expr2._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self.expr1._d_expr(var) - self.expr2._d_expr(var)
 
 
 class Multiplication(Binop):
@@ -337,14 +348,16 @@ class Multiplication(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
         if isinstance(self.expr1, Constant):
-            return self.expr1.val * self.expr2._d_expr()
+            return self.expr1.val * self.expr2._d_expr(var)
         elif isinstance(self.expr2, Constant):
-            return self.expr2.val * self.expr1._d_expr()
+            return self.expr2.val * self.expr1._d_expr(var)
         else:
-            return self.expr1 * self.expr2._d_expr() + self.expr2 * \
-                   self.expr1._d_expr()
+            return self.expr1 * self.expr2._d_expr(var) + self.expr2 * \
+                   self.expr1._d_expr(var)
 
 
 class Division(Binop):
@@ -369,15 +382,17 @@ class Division(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
         if isinstance(self.expr1, Constant):
-            return - self.expr1.val * self.expr2._d_expr() / (self.expr2 *
-                                                              self.expr2)
+            return - self.expr1.val * self.expr2._d_expr(var) / (self.expr2 *
+                                                                 self.expr2)
         elif isinstance(self.expr2, Constant):
-            return self.expr1._d_expr() * (1.0 / self.expr2.val)
+            return self.expr1._d_expr(var) * (1.0 / self.expr2.val)
         else:
-            return self.expr1._d_expr() / self.expr2 - self.expr1 * \
-                   self.expr2._d_expr() / (self.expr2 * self.expr2)
+            return self.expr1._d_expr(var) / self.expr2 - self.expr1 * \
+                   self.expr2._d_expr(var) / (self.expr2 * self.expr2)
 
 
 class Log(Unop):
@@ -411,5 +426,7 @@ class Log(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
-    def _d_expr(self):
-        return 1.0 / self.expr1 * self.expr1._d_expr()
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Constant(1.0) / self.expr1 * self.expr1._d_expr(var)
