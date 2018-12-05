@@ -40,6 +40,30 @@ class Sin(Unop):
             return Constant(0)
         return Cos(self.expr1) * self.expr1._d_expr(var)
 
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        cos_g = Cos(self.expr1)
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(cos_g), n-i) not in d_cache_dict:
+                cos_g_ni = cos_g._d_n(n-i, feed_dict, e_cache_dict,
+                                      d_cache_dict)
+                d_cache_dict[(id(cos_g), n-i)] = cos_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            cos_g_ni = d_cache_dict[(id(cos_g), n-i)]
+            res += (i * g_i * cos_g_ni)
+        res /= n
+        d_cache_dict[id(self), n] = res
+        return d_cache_dict[id(self), n]
+
 
 class Cos(Unop):
     """Trigonometric cosine.
@@ -74,6 +98,30 @@ class Cos(Unop):
         if var not in self.dep_vars:
             return Constant(0)
         return - Sin(self.expr1) * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        sin_g = Sin(self.expr1)
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(sin_g), n-i) not in d_cache_dict:
+                sin_g_ni = sin_g._d_n(n-i, feed_dict, e_cache_dict,
+                                      d_cache_dict)
+                d_cache_dict[(id(sin_g), n-i)] = sin_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            sin_g_ni = d_cache_dict[(id(sin_g), n-i)]
+            res -= (i * g_i * sin_g_ni)
+        res /= n
+        d_cache_dict[id(self), n] = res
+        return d_cache_dict[id(self), n]
 
 
 class Tan(Unop):
@@ -254,6 +302,28 @@ class Exp(Unop):
             return Constant(0)
         return self * self.expr1._d_expr(var)
 
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(self), n-i) not in d_cache_dict:
+                exp_g_ni = self._d_n(n-i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), n-i)] = exp_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            exp_g_ni = d_cache_dict[(id(self), n-i)]
+            res += (i * g_i * exp_g_ni)
+        res /= n
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
+
 
 class Log(Unop):
     """Natural logarithm.
@@ -290,3 +360,36 @@ class Log(Unop):
         if var not in self.dep_vars:
             return Constant(0)
         return Constant(1.0) / self.expr1 * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(1, n):
+            if (id(self), i) not in d_cache_dict:
+                log_g_i = self._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), i)] = log_g_i
+            if (id(self.expr1), n-i) not in d_cache_dict:
+                g_ni = self.expr1._d_n(n-i, feed_dict, e_cache_dict,
+                                       d_cache_dict)
+                d_cache_dict[(id(self.expr1), n-i)] = g_ni
+            log_g_i = d_cache_dict[(id(self), i)]
+            g_ni = d_cache_dict[(id(self.expr1), n-i)]
+            res += (i * log_g_i * g_ni)
+        res /= n
+        if (id(self.expr1), n) not in d_cache_dict:
+            g_n = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[(id(self.expr1), n)] = g_n
+        g_n = d_cache_dict[(id(self.expr1), n)]
+        res = g_n - res
+        if (id(self.expr1), 0) not in d_cache_dict:
+            g_0 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self.expr1), 0)] = g_0
+        g_0 = d_cache_dict[(id(self.expr1), 0)]
+        res /= g_0
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
