@@ -56,10 +56,13 @@ def test_trig_multivar_hessian_2():
     assert(equals(h[y][z], 9.2426242912))
     assert(equals(h[x][z], 9.2426242912))
 
-
-# assert(equals(h[x][x], ))
-# assert(equals(h[y][y], ))
-# assert(equals(h[z][z], ))
-# assert(equals(h[x][y], ))
-# assert(equals(h[y][z], ))
-# assert(equals(h[x][z], ))
+def test_logexp_multivar_hessian_2():
+    x, y, z = ad.Variable(), ad.Variable(), ad.Variable()
+    f = ad.Sinh(ad.Exp(x - 3.0) * y) + ad.Log(y + x ** 2) * z * ad.Sin(x)
+    h = f.hessian({x: 1, y: 3, z: 5})
+    assert(equals(h[x][x], -1.5705707143))
+    assert(equals(h[y][y], -0.2553174360))
+    assert(equals(h[z][z], 0))
+    assert(equals(h[x][y], 0.31902899408))
+    assert(equals(h[y][z], 0.2103677462))
+    assert(equals(h[x][z], 1.1697535323))
