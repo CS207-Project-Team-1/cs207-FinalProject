@@ -50,6 +50,7 @@ class Sin(Unop):
             h_cache[id(self)] = ret
         return h_cache[id(self)]
 
+
 class Cos(Unop):
     """Trigonometric cosine.
 
@@ -93,6 +94,7 @@ class Cos(Unop):
                                       -np.sin(v1) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
 
 class Tan(Unop):
     """Trigonometric tangent.
@@ -139,6 +141,7 @@ class Tan(Unop):
             h_cache[id(self)] = ret
         return h_cache[id(self)]
 
+
 class Sinh(Unop):
     """Hyperbolic sine.
 
@@ -182,6 +185,7 @@ class Sinh(Unop):
                                       np.cosh(v1) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
 
 class Cosh(Unop):
     """Hyperbolic cosine.
@@ -272,6 +276,8 @@ class Tanh(Unop):
                                       +(np.sech(v1) ** 2) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
+
 class Exp(Unop):
     """Exponential function in base e.
 
@@ -315,6 +321,7 @@ class Exp(Unop):
                                       +np.exp(v1) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
 
 class Log(Unop):
     """Natural logarithm.
