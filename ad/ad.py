@@ -42,7 +42,7 @@ class Expression(object):
         @param: e_cache_dict: cache for previously evaluated values
         @param: d_cache_dict: cache for previously calculated derivatives
         '''
-        raise NotImplementedError
+        raise NotImplementedError('Jacobian not implemented for this expr')
     
     def hessian(self, feed_dict):
         '''Evaluates the hessian at the points given, returns to user as a 
@@ -64,7 +64,7 @@ class Expression(object):
         @param: d_cache_dict: cache for previously calculated derivatives
         @param: h_cache_dict: cache for previously calculated double derivatives 
         '''
-        return NotImplementedError
+        raise NotImplementedError('Hessian not implemented for this expr')
 
     def __add__(self, other):
         try:

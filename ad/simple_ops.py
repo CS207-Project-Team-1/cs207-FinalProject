@@ -35,6 +35,21 @@ class Sin(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -np.sin(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +np.cos(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
 class Cos(Unop):
     """Trigonometric cosine.
 
@@ -63,6 +78,21 @@ class Cos(Unop):
                 ret[var] = - d1.get(var, 0) * np.sin(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -np.cos(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      -np.sin(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
 
 class Tan(Unop):
     """Trigonometric tangent.
