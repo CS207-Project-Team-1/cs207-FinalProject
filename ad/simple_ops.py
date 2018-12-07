@@ -35,6 +35,22 @@ class Sin(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -np.sin(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +np.cos(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
+
 class Cos(Unop):
     """Trigonometric cosine.
 
@@ -63,6 +79,22 @@ class Cos(Unop):
                 ret[var] = - d1.get(var, 0) * np.sin(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -np.cos(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      -np.sin(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
 
 class Tan(Unop):
     """Trigonometric tangent.
@@ -93,6 +125,22 @@ class Tan(Unop):
                 ret[var] = d1.get(var, 0) * (1 + tan_tmp * tan_tmp)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+    
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = 2 * ((1.0 / np.cos(v1)) ** 2) * np.tan(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +((1.0 / np.cos(v1)) ** 2) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
 
 class Sinh(Unop):
     """Hyperbolic sine.
@@ -123,6 +171,22 @@ class Sinh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = np.sinh(v1) * d1.get(var1, 0) * d1.get(var2, 0) + \
+                                      np.cosh(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
+
 class Cosh(Unop):
     """Hyperbolic cosine.
 
@@ -151,6 +215,22 @@ class Cosh(Unop):
                 ret[var] = d1.get(var, 0) * np.sinh(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = np.cosh(v1) * d1.get(var1, 0) * d1.get(var2, 0) + \
+                                      np.sinh(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
 
 class Tanh(Unop):
     """Hyperbolic tangent.
@@ -182,6 +262,22 @@ class Tanh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -2 * ((1.0 / np.cosh(v1)) ** 2) * np.tanh(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +((1.0 / np.cosh(v1)) ** 2) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
+
 class Exp(Unop):
     """Exponential function in base e.
 
@@ -210,6 +306,21 @@ class Exp(Unop):
                 ret[var] = d1.get(var, 0) * np.exp(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = np.exp(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +np.exp(v1) * dxy1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
 
 
 class Log(Unop):
@@ -242,3 +353,18 @@ class Log(Unop):
                 ret[var] = d1.get(var, 0) / res1
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0) 
+                    ret[var1][var2] = -(d1.get(var1, 0) * d1.get(var2, 0))/(v1 ** 2) \
+                                      +dxy1 / v1
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
