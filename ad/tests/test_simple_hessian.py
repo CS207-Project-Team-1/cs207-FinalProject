@@ -53,3 +53,26 @@ def test_single_variable_trig_cos():
     assert(equals(f.hessian({x: 1}), -25 * np.cos(5 * 1 + 3)))
     assert(equals(f.hessian({x: 2}), -25 * np.cos(5 * 2 + 3)))
     assert(equals(f.hessian({x: 3}), -25 * np.cos(5 * 3 + 3)))
+
+def test_single_variable_trig_tan():
+    """analytic hessian is -25 cos (5 * x + 3)"""
+    x = ad.Variable()
+    f = ad.Cos(5 * x + 3) * ad.Tan(x * x - 5)
+    assert(equals(f.hessian({x: 1}), -48.05115800))
+    assert(equals(f.hessian({x: 2}), -170.9403025))
+    assert(equals(f.hessian({x: 3}), 218.2792716))
+
+def test_single_variable_trig_hyperbolic():
+    x = ad.Variable()
+    f = x * x * ad.Cosh(0.01 * x + 0.1) + x * ad.Sinh(x * x - 4.0)
+    assert(equals(f.hessian({x: 1}), 22.351093955))
+    assert(equals(f.hessian({x: 2}), 14.02444322))
+    assert(equals(f.hessian({x: 3}), 9351.7592912))
+
+def test_single_variable_trig_hyperbolic_2():
+    x = ad.Variable()
+    # x^2  Cosh[Sin[x] + Tanh[Exp[3 * x] + Log[x]]]
+    g = ad.Sin(x) + ad.Tanh(ad.Exp(3 * x) + ad.Log(x))
+    f = x * x * ad.Cosh(g)
+    assert(equals(f.hessian({x: 1}), 11.464317742))
+    assert(equals(f.hessian({x: 2}), -13.704377252))
