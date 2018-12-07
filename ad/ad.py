@@ -259,7 +259,9 @@ class Power(Binop):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
             res2 = self.expr2._eval(feed_dict, cache_dict)
-            cache_dict[id(self)] = np.power(res1, res2)
+            # cast to float necessary, numpy complains about raising
+            # integers to negative integer powers otherwise.
+            cache_dict[id(self)] = np.power(float(res1), res2)
         return cache_dict[id(self)]
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
@@ -270,9 +272,15 @@ class Power(Binop):
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
             d2 = self.expr2._d(feed_dict, e_cache_dict, d_cache_dict)
             ret = {}
+            # cast to float necessary, numpy complains about raising
+            # integers to negative integer powers otherwise.
             for var in self.dep_vars:
-                ret[var] = res2 * np.power(res1, res2 - 1) * d1.get(var, 0) + \
-                           np.power(res1, res2) * np.log(res1) * d2.get(var, 0)
+                # Short circuit to prevent taking log of zero
+                if d2.get(var, 0) == 0:
+                    ret[var] = res2 * np.power(float(res1), res2 - 1) * d1.get(var, 0) 
+                else:
+                    ret[var] = res2 * np.power(float(res1), res2 - 1) * d1.get(var, 0) + \
+                            np.power(float(res1), res2) * np.log(res1) * d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
