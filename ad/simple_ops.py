@@ -136,8 +136,8 @@ class Tan(Unop):
             for var1 in self.dep_vars:
                 for var2 in self.dep_vars:
                     dxy1 = h1.get(var1, {}).get(var2, 0) 
-                    ret[var1][var2] = 2 * (np.sec(v1) ** 2) * np.tan(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
-                                      +(np.sec(v1) ** 2) * dxy1
+                    ret[var1][var2] = 2 * ((1.0 / np.cos(v1)) ** 2) * np.tan(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +((1.0 / np.cos(v1)) ** 2) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
 
@@ -272,8 +272,8 @@ class Tanh(Unop):
             for var1 in self.dep_vars:
                 for var2 in self.dep_vars:
                     dxy1 = h1.get(var1, {}).get(var2, 0) 
-                    ret[var1][var2] = -2 * (np.sech(v1) ** 2) * np.tanh(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
-                                      +(np.sech(v1) ** 2) * dxy1
+                    ret[var1][var2] = -2 * ((1.0 / np.cosh(v1)) ** 2) * np.tanh(v1) * d1.get(var1, 0) * d1.get(var2, 0) \
+                                      +((1.0 / np.cosh(v1)) ** 2) * dxy1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
 
