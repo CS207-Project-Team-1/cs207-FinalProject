@@ -76,3 +76,19 @@ def test_single_variable_trig_hyperbolic_2():
     f = x * x * ad.Cosh(g)
     assert(equals(f.hessian({x: 1}), 11.464317742))
     assert(equals(f.hessian({x: 2}), -13.704377252))
+
+def test_single_variable_power_simple():
+    x = ad.Variable()
+    f = x ** 5 + x ** 3 - (x + 1.0 / x) ** 2
+    assert(equals(f.hessian({x: 1}), 18.0))
+    assert(equals(f.hessian({x: 2}), 169.625))
+    assert(equals(f.hessian({x: 2.5}), 325.3464))
+
+def test_double_variable_power_throws():
+    x, y = ad.Variable(), ad.Variable()
+    f = x ** (y + 5.0)
+    g = x ** y
+    with pytest.raises(NotImplementedError):
+        g.hessian({x:1, y:1})
+    with pytest.raises(NotImplementedError):
+        f.hessian({x:1, y:1})

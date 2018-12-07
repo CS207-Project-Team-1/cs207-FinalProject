@@ -276,6 +276,31 @@ class Power(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _h(self, feed_dict, e_cache, d_cache, h_cache):
+        """For expressions in the form x^y, I was only able to get a closed
+        form solution for if y is a constant. The general case is way to
+        complicated for me to solve on a piece of paper"""
+        if id(self) not in h_cache:
+            # Both dx^2 and dxdy are just the additions 
+            h1 = self.expr1._h(feed_dict, e_cache, d_cache, h_cache)
+            h2 = self.expr2._h(feed_dict, e_cache, d_cache, h_cache)
+            if h2 != {}:
+                msg = 'Hessian only implemented for x^[constant]'
+                raise NotImplementedError(msg)
+            d1 = self.expr1._d(feed_dict, e_cache, d_cache)
+            v1 = self.expr1._eval(feed_dict, e_cache)
+            v2 = self.expr2._eval(feed_dict, e_cache)
+            ret = {var:{} for var in self.dep_vars}
+            for var1 in self.dep_vars:
+                for var2 in self.dep_vars:
+                    dxy1 = h1.get(var1, {}).get(var2, 0)
+                    dx1, dx2 = d1.get(var1, 0), d1.get(var2, 0)
+                    term1 = (v2 - 1) * v2 * (v1 ** (v2 - 2)) * dx1 * dx2
+                    term2 = v2 * (v1 ** (v2 - 1)) * dxy1 
+                    ret[var1][var2] = term1 + term2
+            h_cache[id(self)] = ret
+        return h_cache[id(self)]
+
 
 class Addition(Binop):
     '''Addition, in the form A + B'''
