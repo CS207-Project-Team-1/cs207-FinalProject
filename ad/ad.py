@@ -87,7 +87,7 @@ class Expression(object):
             return Addition(self, other, grad=(other.grad and self.grad))
         except AttributeError:
             return Addition(self, Constant(other), grad=self.grad)
-    
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -108,11 +108,11 @@ class Expression(object):
             return Multiplication(self, other, grad=(other.grad and self.grad))
         except AttributeError:
             return Multiplication(self, Constant(other), grad=self.grad)
-    
+
     def __rmul__(self, other):
         # TODO: Multiplication not commutative if we enable matrix support
         return self.__mul__(other)
-    
+
     def __truediv__(self, other):
         try:
             return Division(self, other, grad=(other.grad and self.grad))
@@ -142,7 +142,7 @@ class Variable(Expression):
             self.name = str(name)
         # A variable only depends on itself
         self.dep_vars = set([self])
-    
+
     def _eval(self, feed_dict, cache_dict):
         # Check if the user specified either the object in feed_dict or
         # the name of the object in feed_dict
@@ -152,7 +152,7 @@ class Variable(Expression):
             return feed_dict[self.name]
         else:
             raise ValueError('Unbound variable %s' % self.name)
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {self: 1.0}
 
@@ -183,7 +183,7 @@ class Constant(Expression):
         super().__init__(grad=grad)
         self.val = val
         self.dep_vars = set()
-    
+
     def _eval(self, feed_dict, cache_dict):
         return self.val
 
@@ -395,7 +395,7 @@ class Subtraction(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 - res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
@@ -431,7 +431,7 @@ class Multiplication(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 * res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
@@ -486,7 +486,7 @@ class Division(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 / res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)

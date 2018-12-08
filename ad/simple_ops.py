@@ -60,9 +60,15 @@ class Sin(Unop):
             g_i = d_cache_dict[(id(self.expr1), i)]
             cos_g_ni = d_cache_dict[(id(cos_g), n-i)]
             res += (i * g_i * cos_g_ni)
+        # Clear the caching for cos_g
+        if e_cache_dict.get(id(cos_g)):
+            del e_cache_dict[id(cos_g)]
+        for i in range(1, n+1):
+            if d_cache_dict.get((id(cos_g), n-i)):
+                del d_cache_dict[(id(cos_g), n-i)]
         res /= n
-        d_cache_dict[id(self), n] = res
-        return d_cache_dict[id(self), n]
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
 
 class Cos(Unop):
@@ -119,9 +125,15 @@ class Cos(Unop):
             g_i = d_cache_dict[(id(self.expr1), i)]
             sin_g_ni = d_cache_dict[(id(sin_g), n-i)]
             res -= (i * g_i * sin_g_ni)
+        # Clear the caching for sin_g
+        if e_cache_dict.get(id(sin_g)):
+            del e_cache_dict[id(sin_g)]
+        for i in range(1, n+1):
+            if d_cache_dict.get((id(sin_g), n-i)):
+                del d_cache_dict[(id(sin_g), n-i)]
         res /= n
-        d_cache_dict[id(self), n] = res
-        return d_cache_dict[id(self), n]
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
 
 class Tan(Unop):
