@@ -59,3 +59,10 @@ def test_binop():
     assert np.isclose(y.d_n(n=1, val=2.0), 12.0)
     assert np.isclose(y.d_n(n=3, val=2.0), 6.0)
     assert np.isclose(y.d_n(n=5, val=2.0), 0.0)
+
+
+def test_complex():
+    x = ad.Variable("x")
+    y = - 12 * ad.Cos(x ** 2) + 8 * (x ** 3) * ad.Sin(x ** 2)
+    yd5 = y.d_expr(5)
+    assert np.isclose(y.d_n(5, 2.0), yd5.eval({x: 2.0}))
