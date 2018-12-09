@@ -405,7 +405,7 @@ class Exp(Unop):
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return Exp(self.expr1) * self.expr1._d_expr(var)
+        return self * self.expr1._d_expr(var)
 
     def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
         if (id(self), n) in d_cache_dict:
