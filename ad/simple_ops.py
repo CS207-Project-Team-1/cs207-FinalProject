@@ -566,14 +566,14 @@ class Arccos(Unop):
             res1 = self.expr1._eval(feed_dict, e_cache_dict)
             ret = {}
             for var in self.dep_vars:
-                ret[var] = d1.get(var, 0) / np.sqrt(1 - res1 ** 2)
+                ret[var] = - d1.get(var, 0) / np.sqrt(1 - res1 ** 2)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
+        return - 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
 
 
 class Arctan(Unop):
