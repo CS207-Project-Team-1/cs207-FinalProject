@@ -3,7 +3,8 @@ unops that are used frequently"""
 from .ad import Unop, Constant
 import numpy as np
 
-__all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log']
+__all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log', 'Arcsin',
+           'Arccos', 'Arctan']
 
 
 class Sin(Unop):
