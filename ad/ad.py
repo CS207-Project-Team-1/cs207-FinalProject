@@ -13,6 +13,7 @@ class Expression(object):
     def __init__(self, grad=False):
         self.grad = grad
         self.children = []
+        self.dep_vars = set()
 
     def eval(self, feed_dict):
         '''Evaluates the entire computation graph given a dictionary of
@@ -27,7 +28,7 @@ class Expression(object):
         '''Evaluates the derivative at the points given, returns to user'''
         res =  self._d(feed_dict, dict(), dict())
         if len(self.dep_vars) == 0:
-            # No dependent variables - it is a constantb
+            # No dependent variables - it is a constant
             return 0
         if len(res) == 1:
             # This is the non-vectorized case, scalar func of scalar
@@ -66,6 +67,41 @@ class Expression(object):
         '''
         raise NotImplementedError('Hessian not implemented for this expr')
 
+    def d_expr(self, n=1):
+        """Return n-th order derivative as an Expression.
+        Scalar input only.
+        """
+        var = list(self.dep_vars)[0]
+        di = self
+        for i in range(n):
+            di = di._d_expr(var)
+        return di
+
+    def _d_expr(self, var):
+        """Helper - Evaluates the partial derivative as an Expression."""
+        raise NotImplementedError
+
+    def d_n(self, n, val):
+        """Return the value of n-th order derivative. Scalar input only.
+
+        Expressions that implements d_n method are: Variable, Constant,
+        Negation, Addition, Subtraction, Multiplication, Division,
+        Expression ** Constant, Sin, Cos, Exp, Log, and their combinations.
+        """
+        var = list(self.dep_vars)[0]
+        return self._d_n(n, {var: val}, {}, {}) * np.math.factorial(n)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        """ Helper - Evaluates (the n-th order derivative) / (n!).
+
+        @param: n: the order of derivative
+        @param: feed_dict: dictionary mapping var names
+        @param: e_cache_dict: cache for previously evaluated values
+        @param: d_cache_dict: cache for previously calculated derivatives
+        @return: the value of the n-th order derivative
+        """
+        raise NotImplementedError
+
     def __add__(self, other):
         try:
             # Propagate the need for gradient if one thing needs gradient
@@ -73,7 +109,7 @@ class Expression(object):
             return Addition(self, other, grad=(other.grad and self.grad))
         except AttributeError:
             return Addition(self, Constant(other), grad=self.grad)
-    
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -94,11 +130,11 @@ class Expression(object):
             return Multiplication(self, other, grad=(other.grad and self.grad))
         except AttributeError:
             return Multiplication(self, Constant(other), grad=self.grad)
-    
+
     def __rmul__(self, other):
         # TODO: Multiplication not commutative if we enable matrix support
         return self.__mul__(other)
-    
+
     def __truediv__(self, other):
         try:
             return Division(self, other, grad=(other.grad and self.grad))
@@ -128,7 +164,7 @@ class Variable(Expression):
 
         # A variable only depends on itself
         self.dep_vars = set([self])
-    
+
     def _eval(self, feed_dict, cache_dict):
         # Check if the user specified either the object in feed_dict or
         # the name of the object in feed_dict
@@ -138,12 +174,26 @@ class Variable(Expression):
             return feed_dict[self.name]
         else:
             raise ValueError('Unbound variable %s' % self.name)
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {self: 1.0}
     
     def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
         return {self: {self: 0}}
+
+    def _d_expr(self, var):
+        if var == self:
+            return Constant(1.0)
+        else:
+            return Constant(0)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if n == 0:
+            return self._eval(feed_dict, e_cache_dict)
+        elif n == 1:
+            return 1.0
+        else:
+            return 0.0
 
     def __repr__(self):
         if self.name:
@@ -158,12 +208,21 @@ class Constant(Expression):
         super().__init__(grad=grad)
         self.val = val
         self.dep_vars = set()
-    
+
     def _eval(self, feed_dict, cache_dict):
         return self.val
 
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         return {}
+
+    def _d_expr(self, var):
+        return Constant(0.0)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if n == 0:
+            return self.val
+        else:
+            return 0.0
 
     def _h(self, feed_dict, e_cache_dict, d_cache_dict, h_cache_dict):
         return {}
@@ -222,6 +281,19 @@ class Negation(Unop):
                     ret[var1][var2] = - h1.get(var1, {}).get(var2, 0)
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
+    def _d_expr(self, var):
+        return - self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+        else:
+            res1 = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+        d_cache_dict[(id(self), n)] = -res1
+        return d_cache_dict[(id(self), n)]
 
 
 class Binop(Expression):
@@ -284,6 +356,47 @@ class Power(Binop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        if isinstance(self.expr1, Constant):
+            return np.log(self.expr1.val) * (self.expr1 ** self.expr2)
+        elif isinstance(self.expr2, Constant):
+            return self.expr2.val * (self.expr1 ** (self.expr2.val - 1))
+        else:
+            msg = "Do not support f(x) ** g(x)"
+            raise NotImplementedError(msg)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if not isinstance(self.expr2, Constant):
+            msg = "Do not support c ** g(x) or f(x) ** g(x)"
+            raise NotImplementedError(msg)
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        a = self.expr2.val
+        res = 0
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(self), n-i) not in d_cache_dict:
+                ga_ni = self._d_n(n-i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), n-i)] = ga_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            ga_ni = d_cache_dict[(id(self), n-i)]
+            res += (float(a + 1) * i / n - 1) * g_i * ga_ni
+        if (id(self.expr1), 0) not in d_cache_dict:
+            g_0 = self.expr1._d_n(0, feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[(id(self.expr1), 0)] = g_0
+        g_0 = d_cache_dict[(id(self.expr1), 0)]
+        res /= g_0
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
+
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         """For expressions in the form x^y, I was only able to get a closed
         form solution for if y is a constant. The general case is way to
@@ -328,6 +441,22 @@ class Addition(Binop):
                 ret[var] = d1.get(var, 0) + d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self.expr1._d_expr(var) + self.expr2._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res1 = self._eval(feed_dict, e_cache_dict)
+        else:
+            res1 = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict) + \
+                   self.expr2._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+        d_cache_dict[(id(self), n)] = res1
+        return d_cache_dict[(id(self), n)]
     
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -352,7 +481,7 @@ class Subtraction(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 - res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
@@ -362,6 +491,22 @@ class Subtraction(Binop):
                 ret[var] = d1.get(var, 0) - d2.get(var, 0)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self.expr1._d_expr(var) - self.expr2._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res1 = self._eval(feed_dict, e_cache_dict)
+        else:
+            res1 = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict) - \
+                   self.expr2._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+        d_cache_dict[(id(self), n)] = res1
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -386,7 +531,7 @@ class Multiplication(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 * res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
@@ -419,6 +564,39 @@ class Multiplication(Binop):
             h_cache[id(self)] = ret
         return h_cache[id(self)]
 
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        if isinstance(self.expr1, Constant):
+            return self.expr1.val * self.expr2._d_expr(var)
+        elif isinstance(self.expr2, Constant):
+            return self.expr2.val * self.expr1._d_expr(var)
+        else:
+            return self.expr1 * self.expr2._d_expr(var) + self.expr2 * \
+                   self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                f_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = f_i
+            if (id(self.expr2), n-i) not in d_cache_dict:
+                g_ni = self.expr2._d_n(n-i, feed_dict, e_cache_dict,
+                                       d_cache_dict)
+                d_cache_dict[(id(self.expr2), n-i)] = g_ni
+            f_i = d_cache_dict[(id(self.expr1), i)]
+            g_ni = d_cache_dict[(id(self.expr2), n-i)]
+            res += f_i * g_ni
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
+
 
 class Division(Binop):
     '''Division, in the form A / B'''
@@ -428,7 +606,7 @@ class Division(Binop):
             res2 = self.expr2._eval(feed_dict, cache_dict)
             cache_dict[id(self)] = res1 / res2
         return cache_dict[id(self)]
-    
+
     def _d(self, feed_dict, e_cache_dict, d_cache_dict):
         if id(self) not in d_cache_dict:
             d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
@@ -441,6 +619,49 @@ class Division(Binop):
                                                       (res2 * res2))
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        if isinstance(self.expr1, Constant):
+            return - self.expr1.val * self.expr2._d_expr(var) / (self.expr2 *
+                                                                 self.expr2)
+        elif isinstance(self.expr2, Constant):
+            return self.expr1._d_expr(var) * (1.0 / self.expr2.val)
+        else:
+            return self.expr1._d_expr(var) / self.expr2 - self.expr1 * \
+                   self.expr2._d_expr(var) / (self.expr2 * self.expr2)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(n):
+            if (id(self), i) not in d_cache_dict:
+                div_i = self._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), i)] = div_i
+            if (id(self.expr2), n-i) not in d_cache_dict:
+                g_ni = self.expr2._d_n(n-i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr2), n-i)] = g_ni
+            div_i = d_cache_dict[(id(self), i)]
+            g_ni = d_cache_dict[(id(self.expr2), n-i)]
+            res -= div_i * g_ni
+        if (id(self.expr1), n) not in d_cache_dict:
+            f_n = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[(id(self.expr1), n)] = f_n
+        f_n = d_cache_dict[(id(self.expr1), n)]
+        res += f_n
+        if (id(self.expr2), 0) not in d_cache_dict:
+            g_0 = self.expr2._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self.expr2), 0)] = g_0
+        g_0 = d_cache_dict[(id(self.expr2), 0)]
+        res /= g_0
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:

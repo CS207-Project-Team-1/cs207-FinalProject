@@ -1,6 +1,6 @@
 """Implementations of most simple trigonometic operations and other simple
 unops that are used frequently"""
-from .ad import Unop
+from .ad import Unop, Constant
 import numpy as np
 
 __all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log']
@@ -34,6 +34,41 @@ class Sin(Unop):
                 ret[var] = d1.get(var, 0) * np.cos(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Cos(self.expr1) * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        cos_g = Cos(self.expr1)
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(cos_g), n-i) not in d_cache_dict:
+                cos_g_ni = cos_g._d_n(n-i, feed_dict, e_cache_dict,
+                                      d_cache_dict)
+                d_cache_dict[(id(cos_g), n-i)] = cos_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            cos_g_ni = d_cache_dict[(id(cos_g), n-i)]
+            res += (i * g_i * cos_g_ni)
+        # Clear the caching for cos_g
+        if e_cache_dict.get(id(cos_g)):
+            del e_cache_dict[id(cos_g)]
+        for i in range(1, n+1):
+            if d_cache_dict.get((id(cos_g), n-i)):
+                del d_cache_dict[(id(cos_g), n-i)]
+        res /= n
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -79,6 +114,41 @@ class Cos(Unop):
                 ret[var] = - d1.get(var, 0) * np.sin(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return - Sin(self.expr1) * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        sin_g = Sin(self.expr1)
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(sin_g), n-i) not in d_cache_dict:
+                sin_g_ni = sin_g._d_n(n-i, feed_dict, e_cache_dict,
+                                      d_cache_dict)
+                d_cache_dict[(id(sin_g), n-i)] = sin_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            sin_g_ni = d_cache_dict[(id(sin_g), n-i)]
+            res -= (i * g_i * sin_g_ni)
+        # Clear the caching for sin_g
+        if e_cache_dict.get(id(sin_g)):
+            del e_cache_dict[id(sin_g)]
+        for i in range(1, n+1):
+            if d_cache_dict.get((id(sin_g), n-i)):
+                del d_cache_dict[(id(sin_g), n-i)]
+        res /= n
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -142,6 +212,13 @@ class Tan(Unop):
         return h_cache[id(self)]
 
 
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / (Cos(self.expr1) * Cos(self.expr1)) * \
+               self.expr1._d_expr(var)
+
+
 class Sinh(Unop):
     """Hyperbolic sine.
 
@@ -170,6 +247,11 @@ class Sinh(Unop):
                 ret[var] = d1.get(var, 0) * np.cosh(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(var)
+        return Cosh(self.expr1) * self.expr1._d_expr(var)
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -215,6 +297,12 @@ class Cosh(Unop):
                 ret[var] = d1.get(var, 0) * np.sinh(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Sinh(self.expr1) * self.expr1._d_expr(var)
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -262,6 +350,12 @@ class Tanh(Unop):
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
 
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / (Cosh(self.expr1) * Cosh(self.expr1)) * \
+               self.expr1._d_expr(var)
+
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
             # Both dx^2 and dxdy are just the additions 
@@ -306,6 +400,33 @@ class Exp(Unop):
                 ret[var] = d1.get(var, 0) * np.exp(res1)
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return self * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(1, n+1):
+            if (id(self.expr1), i) not in d_cache_dict:
+                g_i = self.expr1._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self.expr1), i)] = g_i
+            if (id(self), n-i) not in d_cache_dict:
+                exp_g_ni = self._d_n(n-i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), n-i)] = exp_g_ni
+            g_i = d_cache_dict[(id(self.expr1), i)]
+            exp_g_ni = d_cache_dict[(id(self), n-i)]
+            res += (i * g_i * exp_g_ni)
+        res /= n
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
@@ -353,6 +474,44 @@ class Log(Unop):
                 ret[var] = d1.get(var, 0) / res1
             d_cache_dict[id(self)] = ret
         return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return Constant(1.0) / self.expr1 * self.expr1._d_expr(var)
+
+    def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
+        if (id(self), n) in d_cache_dict:
+            return d_cache_dict[(id(self), n)]
+        if n == 0:
+            res = self._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self), 0)] = res
+            return d_cache_dict[(id(self), 0)]
+        res = 0
+        for i in range(1, n):
+            if (id(self), i) not in d_cache_dict:
+                log_g_i = self._d_n(i, feed_dict, e_cache_dict, d_cache_dict)
+                d_cache_dict[(id(self), i)] = log_g_i
+            if (id(self.expr1), n-i) not in d_cache_dict:
+                g_ni = self.expr1._d_n(n-i, feed_dict, e_cache_dict,
+                                       d_cache_dict)
+                d_cache_dict[(id(self.expr1), n-i)] = g_ni
+            log_g_i = d_cache_dict[(id(self), i)]
+            g_ni = d_cache_dict[(id(self.expr1), n-i)]
+            res += (i * log_g_i * g_ni)
+        res /= n
+        if (id(self.expr1), n) not in d_cache_dict:
+            g_n = self.expr1._d_n(n, feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[(id(self.expr1), n)] = g_n
+        g_n = d_cache_dict[(id(self.expr1), n)]
+        res = g_n - res
+        if (id(self.expr1), 0) not in d_cache_dict:
+            g_0 = self.expr1._eval(feed_dict, e_cache_dict)
+            d_cache_dict[(id(self.expr1), 0)] = g_0
+        g_0 = d_cache_dict[(id(self.expr1), 0)]
+        res /= g_0
+        d_cache_dict[(id(self), n)] = res
+        return d_cache_dict[(id(self), n)]
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
         if id(self) not in h_cache:
