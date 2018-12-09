@@ -1,5 +1,6 @@
 """Tests for the basic, one dimensional binary and unary operations"""
 import ad
+import numpy as np
 import pytest
 
 def test_constant_addition():
@@ -90,3 +91,21 @@ def test_variable_division():
     d = b / a
     assert c.eval({a: 100, b: 2}) == 50
     assert d.eval({a: 10, b: 20}) == 2
+
+def test_inverse_trig():
+    a, b = ad.Variable('a'), ad.Variable('b')
+
+    c = ad.Arcsin(a / b)
+    assert np.isclose(np.arcsin(0.5), c.eval({a: 1.0, b: 2.0}))
+    d = ad.Arcsin(a)
+    assert np.isclose(1.0/np.sqrt(1.0 - 0.5**2), d.d({a: 0.5}))
+
+    c = ad.Arccos(a * b)
+    assert np.isclose(np.arccos(0.25), c.eval({a: 0.5, b: 0.5}))
+    d = ad.Arccos(a)
+    assert np.isclose(-1.0 / np.sqrt(1.0 - 0.5 ** 2), d.d({a: 0.5}))
+
+    c = ad.Arctan(a / b)
+    assert np.isclose(np.arctan(0.5), c.eval({a: 1.0, b: 2.0}))
+    d = ad.Arctan(a)
+    assert np.isclose(1.0/(1 + 0.5**2), d.d({a: 0.5}))
