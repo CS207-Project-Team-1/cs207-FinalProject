@@ -251,7 +251,7 @@ class Sinh(Unop):
 
     def _d_expr(self, var):
         if var not in self.dep_vars:
-            return Constant(var)
+            return Constant(0)
         return Cosh(self.expr1) * self.expr1._d_expr(var)
 
     def _h(self, feed_dict, e_cache, d_cache, h_cache):
