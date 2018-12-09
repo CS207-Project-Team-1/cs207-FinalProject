@@ -527,3 +527,72 @@ class Log(Unop):
                                       +dxy1 / v1
             h_cache[id(self)] = ret
         return h_cache[id(self)]
+
+
+class Arcsin(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.arcsin(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) / np.sqrt(1 - res1 ** 2)
+            d_cache_dict[id(self)] = ret
+        return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
+
+
+class Arccos(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.arccos(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) / np.sqrt(1 - res1 ** 2)
+            d_cache_dict[id(self)] = ret
+        return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
+
+
+class Arctan(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.arctan(res1)
+        return cache_dict[id(self)]
+
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            ret = {}
+            for var in self.dep_vars:
+                ret[var] = d1.get(var, 0) / (1 + res1 ** 2)
+            d_cache_dict[id(self)] = ret
+        return d_cache_dict[id(self)]
+
+    def _d_expr(self, var):
+        if var not in self.dep_vars:
+            return Constant(0)
+        return 1.0 / (1.0 + self ** 2) * self.d_expr()
