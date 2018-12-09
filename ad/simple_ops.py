@@ -405,7 +405,7 @@ class Exp(Unop):
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return self * self.expr1._d_expr(var)
+        return Exp(self.expr1) * self.expr1._d_expr(var)
 
     def _d_n(self, n, feed_dict, e_cache_dict, d_cache_dict):
         if (id(self), n) in d_cache_dict:
@@ -550,7 +550,7 @@ class Arcsin(Unop):
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
+        return 1.0 / ((1.0 - Arcsin(self.expr1) ** 2) ** 0.5) * self.d_expr()
 
 
 class Arccos(Unop):
@@ -573,7 +573,7 @@ class Arccos(Unop):
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return - 1.0 / ((1.0 - self ** 2) ** 0.5) * self.d_expr()
+        return - 1.0 / ((1.0 - Arccos(self.expr1) ** 2) ** 0.5) * self.d_expr()
 
 
 class Arctan(Unop):
@@ -596,4 +596,4 @@ class Arctan(Unop):
     def _d_expr(self, var):
         if var not in self.dep_vars:
             return Constant(0)
-        return 1.0 / (1.0 + self ** 2) * self.d_expr()
+        return 1.0 / (1.0 + Arctan(self.expr1) ** 2) * self.d_expr()
