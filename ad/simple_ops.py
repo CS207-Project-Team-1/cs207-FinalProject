@@ -599,3 +599,18 @@ class Arctan(Unop):
         if var not in self.dep_vars:
             return Constant(0)
         return 1.0 / (1.0 + self.expr1 * self.expr1) * self.expr1.d_expr()
+
+
+def Logistic(x):
+    """Logistic function."""
+    return 1.0 / (1 + Exp(-x))
+
+
+def Logb(b, x):
+    """Logarithm function that handles base b."""
+    return Log(x) / np.log(b)
+
+
+def Sqrt(x):
+    """Square root function."""
+    return x ** 0.5
