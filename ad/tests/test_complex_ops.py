@@ -132,11 +132,11 @@ def test_hyperbolic_expressions():
     f5 = ad.Exp(x)
     f6 = ad.Cos(x)
     assert f1._d_expr(y).eval({x:1}) == 0
-    assert f1._d_expr(x).eval({x:1}) == f1.d({x: 1})
+    assert np.isclose(f1._d_expr(x).eval({x:1}), f1.d({x: 1}))
     assert f2._d_expr(y).eval({x:1}) == 0
-    assert f2._d_expr(x).eval({x:1}) == f2.d({x: 1})
+    assert np.isclose(f2._d_expr(x).eval({x:1}), f2.d({x: 1}))
     assert f3._d_expr(y).eval({x:1}) == 0
-    assert f3._d_expr(x).eval({x:1}) == f3.d({x: 1})
+    assert np.isclose(f3._d_expr(x).eval({x:1}), f3.d({x: 1}))
     assert f4._d_expr(y).eval({x:1}) == 0
     assert np.isclose(f4._d_expr(x).eval({x:1}), f4.d({x: 1}))
     assert f5._d_expr(y).eval({x:1}) == 0
