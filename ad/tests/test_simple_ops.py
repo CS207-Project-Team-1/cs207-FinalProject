@@ -109,3 +109,22 @@ def test_inverse_trig():
     assert np.isclose(np.arctan(0.5), c.eval({a: 1.0, b: 2.0}))
     d = ad.Arctan(a)
     assert np.isclose(1.0/(1 + 0.5**2), d.d({a: 0.5}))
+
+def test_logistic():
+    a = ad.Variable('a')
+    f = ad.Logistic(a)
+    assert f.eval({a:0}) == 0.5
+    assert np.isclose(f.d({a:1}), 0.19661193324148188)
+
+def test_sqrt():
+    a = ad.Variable('a')
+    f = ad.Sqrt(a)
+    assert f.eval({a:1}) == 1.0
+    assert f.d({a:1}) == 0.5
+
+def test_logb():
+    a = ad.Variable('a')
+    f = ad.Logb(10, a)
+    assert np.isclose(f.eval({a:2}), 0.30102999566398114)
+    assert np.isclose(f.d({a:2}), 0.21714724095162588)
+
