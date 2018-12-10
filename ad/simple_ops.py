@@ -4,7 +4,7 @@ from .ad import Unop, Constant
 import numpy as np
 
 __all__ = ['Sin', 'Cos', 'Tan', 'Sinh', 'Cosh', 'Tanh', 'Exp', 'Log', 'Arcsin',
-           'Arccos', 'Arctan']
+           'Arccos', 'Arctan', 'Logistic', 'Logb', 'Sqrt']
 
 
 class Sin(Unop):
