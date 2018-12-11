@@ -378,6 +378,17 @@ class Power(Binop):
             d_cache_dict[(id(self), 0)] = res
             return d_cache_dict[(id(self), 0)]
         a = self.expr2.val
+        if (id(self.expr1), 0) not in d_cache_dict:
+            g_0 = self.expr1._d_n(0, feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[(id(self.expr1), 0)] = g_0
+        g_0 = d_cache_dict[(id(self.expr1), 0)]
+        if np.isclose(g_0, 0):
+            if a >= n:
+                d_cache_dict[(id(self), n)] = 0.0
+                return 0.0
+            else:
+                raise ValueError("If base of power is 0, the exponent should "
+                                 "be greater than n")
         res = 0
         for i in range(1, n+1):
             if (id(self.expr1), i) not in d_cache_dict:
@@ -389,10 +400,6 @@ class Power(Binop):
             g_i = d_cache_dict[(id(self.expr1), i)]
             ga_ni = d_cache_dict[(id(self), n-i)]
             res += (float(a + 1) * i / n - 1) * g_i * ga_ni
-        if (id(self.expr1), 0) not in d_cache_dict:
-            g_0 = self.expr1._d_n(0, feed_dict, e_cache_dict, d_cache_dict)
-            d_cache_dict[(id(self.expr1), 0)] = g_0
-        g_0 = d_cache_dict[(id(self.expr1), 0)]
         res /= g_0
         d_cache_dict[(id(self), n)] = res
         return d_cache_dict[(id(self), n)]
