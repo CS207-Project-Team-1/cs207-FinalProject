@@ -109,3 +109,17 @@ def test_inverse_trig():
     assert np.isclose(np.arctan(0.5), c.eval({a: 1.0, b: 2.0}))
     d = ad.Arctan(a)
     assert np.isclose(1.0/(1 + 0.5**2), d.d({a: 0.5}))
+
+def test_power_base0():
+    a = ad.Variable('a')
+    c = a ** 2
+    assert np.isclose(0, c.d_n(2, 0))
+    assert np.isclose(0, c.d_n(4, 0))
+
+    d = a ** (-1)
+    with pytest.raises(ZeroDivisionError):
+        d.d_n(2, 0)
+
+    e = a ** (3.5)
+    with pytest.raises(ZeroDivisionError):
+        e.d_n(4, 0)
