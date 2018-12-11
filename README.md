@@ -35,6 +35,12 @@ For the stable version, you can install our package from PyPI.
 pip install autodiffx
 ```
 
+You can also install the nightly version from our Github using pip.
+
+```bash
+pip install git+https://github.com/CS207-Project-Team-1/cs207-FinalProject
+```
+
 ## Testing
 
 All of the tests are run using pytest. To run pytest, you want to be in the
