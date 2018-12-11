@@ -383,12 +383,16 @@ class Power(Binop):
             d_cache_dict[(id(self.expr1), 0)] = g_0
         g_0 = d_cache_dict[(id(self.expr1), 0)]
         if np.isclose(g_0, 0):
-            if a >= n:
+            if a < 0:
+                msg = "The exponent should be greater than 0 when the base is 0"
+                raise ZeroDivisionError(msg)
+            elif np.isclose(a, int(a)) or a >= n:
                 d_cache_dict[(id(self), n)] = 0.0
                 return 0.0
             else:
-                raise ValueError("If base of power is 0, the exponent should "
-                                 "be greater than n")
+                msg = "If base of power is 0 and exponent is not an " \
+                      "integer, the exponent should be greater than n"
+                raise ZeroDivisionError(msg)
         res = 0
         for i in range(1, n+1):
             if (id(self.expr1), i) not in d_cache_dict:

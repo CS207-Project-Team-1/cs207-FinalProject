@@ -127,4 +127,17 @@ def test_logb():
     f = ad.Logb(10, a)
     assert np.isclose(f.eval({a:2}), 0.30102999566398114)
     assert np.isclose(f.d({a:2}), 0.21714724095162588)
+    
+def test_power_base0():
+    a = ad.Variable('a')
+    c = a ** 2
+    assert np.isclose(0, c.d_n(2, 0))
+    assert np.isclose(0, c.d_n(4, 0))
 
+    d = a ** (-1)
+    with pytest.raises(ZeroDivisionError):
+        d.d_n(2, 0)
+
+    e = a ** (3.5)
+    with pytest.raises(ZeroDivisionError):
+        e.d_n(4, 0)
