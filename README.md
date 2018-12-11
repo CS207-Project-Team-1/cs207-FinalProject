@@ -53,3 +53,12 @@ python -m pytest
 ```
 
 This should run all of the tests for the package.
+
+
+## Documentation
+
+Comprehensive documentation is available [here.](docs/Documentation.ipynb) There are also several demos that you should be able to access through the `demos/` folder. Currently, the available demos are:
+
+* Root finding with Newton's Method [(link)](demos/Newton_Method_Demonstration.ipynb)
+* Using the Hessian in Optimization Problems [(link)](demos/Hessian_Demonstration.ipynb)
+* Estimating Taylor Series Errors [(link)](demos/Higher_Order_Demonstration.ipynb)
