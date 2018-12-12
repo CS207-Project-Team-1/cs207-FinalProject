@@ -155,6 +155,12 @@ class Expression(object):
             return Power(self, other, grad=(other.grad and self.grad))
         except AttributeError:
             return Power(self, Constant(other), grad=(self.grad))
+    
+    def __rpow__(self, other):
+        try:
+            return Power(other, self, grad=(other.grad and self.grad))
+        except AttributeError:
+            return Power(Constant(other), self, grad=(self.grad))
 
 
 class Variable(Expression):

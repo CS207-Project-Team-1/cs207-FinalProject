@@ -141,3 +141,9 @@ def test_power_base0():
     e = a ** (3.5)
     with pytest.raises(ZeroDivisionError):
         e.d_n(4, 0)
+
+def test_power_constant_base():
+    x = ad.Variable()
+    f = 2 ** x
+    assert np.isclose(f.eval({x: 5}), 32)
+    assert np.isclose(f.eval({x: 5.2}), 2 ** 5.2)
